@@ -75,9 +75,9 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Mvvm\DataErrorBindableBase.cs" />
-    <Compile Include="Mvvm\ModelBase.cs" />
-    <Compile Include="Mvvm\ViewModelBase.cs" />
+    <Compile Include="Bindable\DataErrorBindableBase.cs" />
+    <Compile Include="Bindable\ModelBase.cs" />
+    <Compile Include="Bindable\ViewModelBase.cs" />
     <Compile Include="Events\ViewChangeRequestEvent.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -85,7 +85,6 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
-    <None Include="PrismBase.nuspec" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

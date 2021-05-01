@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.30621.155
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppConfigurationManager", "AppConfigurationManager\AppConfigurationManager.csproj", "{53B35FCC-A783-4A45-BC9B-D16C4B32B048}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MvvmBase", "PrismBase\MvvmBase.csproj", "{805CDD1D-B55B-46FC-8551-8F38E30A2EE7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MvvmBase", "MvvmBase\MvvmBase.csproj", "{805CDD1D-B55B-46FC-8551-8F38E30A2EE7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
