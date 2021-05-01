@@ -1,8 +1,8 @@
 ﻿using Prism.Events;
 using Prism.Ioc;
-using PrismBase.Events;
+using MvvmBase.Events;
 
-namespace PrismBase.Mvvm
+namespace MvvmBase.Bindable
 {
     /// <summary>
     /// Abstract base class for view models. Inherits from <see cref="DataErrorBindableBase"/>.

@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{805CDD1D-B55B-46FC-8551-8F38E30A2EE7}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>PrismBase</RootNamespace>
-    <AssemblyName>PrismBase</AssemblyName>
+    <RootNamespace>MvvmBase</RootNamespace>
+    <AssemblyName>MvvmBase</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

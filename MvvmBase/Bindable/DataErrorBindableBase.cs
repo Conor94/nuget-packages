@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
 
-namespace PrismBase.Mvvm
+namespace MvvmBase.Bindable
 {
     /// <summary>
     /// Inherits from <see cref="BindableBase"/> and implements the <see cref="IDataErrorInfo"/> interface.

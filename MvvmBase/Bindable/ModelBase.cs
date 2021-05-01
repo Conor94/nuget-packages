@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace PrismBase.Mvvm
+namespace MvvmBase.Bindable
 {
     public abstract class ModelBase : DataErrorBindableBase, IDisposable
     {
