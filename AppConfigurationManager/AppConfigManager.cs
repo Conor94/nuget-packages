@@ -9,7 +9,7 @@ namespace AppConfigurationManager
     /// to create a custom configuration section.
     /// </summary>
     /// <remarks>
-    /// Call <see cref="Init(Environment.SpecialFolder)"/> to initialize this class before calling any other methods.
+    /// Call <see cref="Init(Environment.SpecialFolder, string)"/> to initialize this class before calling any other methods.
     /// </remarks>
     public static class AppConfigManager<TSection> where TSection : ConfigurationSection, new()
     {
@@ -31,8 +31,8 @@ namespace AppConfigurationManager
 
         #region Methods
         /// <summary>
-        /// Creates the configuration file if it is not already created.
-        /// <para/>
+        /// Creates the configuration file if it is not already created.<para/>
+        /// 
         /// The file will be created as follows: "{SpecialFolder}\{AssemblyName}\{AssemblyName}.exe.config", 
         /// where {SpecialFolder} is the path to the special system folder and {AssemblyName} is the name
         /// of the assembly that called this method.
@@ -68,7 +68,7 @@ namespace AppConfigurationManager
         /// Gets the configuration section of type <typeparamref name="TSection"/>.
         /// </summary>
         /// <remarks>
-        /// <see cref="Init(Environment.SpecialFolder)"/> must be called before calling this method.
+        /// <see cref="Init(Environment.SpecialFolder, string)"/> must be called before calling this method.
         /// </remarks>
         /// <returns><typeparamref name="TSection"/> if the section is found and <see langword="null"/> if the
         /// section could not be found.</returns>
@@ -84,7 +84,7 @@ namespace AppConfigurationManager
         /// if the file cannot be saved.
         /// </summary>
         /// <remarks>
-        /// <see cref="Init(Environment.SpecialFolder)"/> must be called before calling this method.
+        /// <see cref="Init(Environment.SpecialFolder, string)"/> must be called before calling this method.
         /// </remarks>
         /// <exception cref="ConfigurationErrorsException"/>
         public static void Save()
