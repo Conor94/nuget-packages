@@ -2,10 +2,16 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Reflection;
 
 namespace MvvmBase.Bindable
 {
+    /// <summary>
+    /// <see cref="BindableBase"/> that also inherits <see cref="IDataErrorInfo"/>. This class provides the ability to
+    /// use the <see cref="IDataErrorInfo"/> interface without implementing custom logic using the <see cref="this[string]"/>
+    /// indexer (refer to <a href="https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/indexers/"/> for more information
+    /// on indexers).
+    /// </summary>
+    /// <remarks>Use <see cref="AddValidator(string, IDataErrorValidator)"/> to add a validator method.</remarks>
     public abstract class DataErrorBindableBase : BindableBase, IDataErrorInfo
     {
         #region IDataErrorInfo
@@ -17,7 +23,7 @@ namespace MvvmBase.Bindable
                 if (ValidatorFunctions.ContainsKey(propertyName) && ValidatorFunctions[propertyName] != null)
                 {
                     // Invoke the validator function for the property and return the error message if there is one
-                    if (!ValidatorFunctions[propertyName].Invoke(mInheritedType.GetProperty(propertyName).GetValue(this), out string errorMessage))
+                    if (!ValidatorFunctions[propertyName].Validate(mInheritedType.GetProperty(propertyName).GetValue(this), out string errorMessage))
                     {
                         return errorMessage;
                     }

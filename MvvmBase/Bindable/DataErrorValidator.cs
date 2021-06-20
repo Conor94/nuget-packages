@@ -1,10 +1,12 @@
 ﻿namespace MvvmBase.Bindable
 {
-    /// <summary>Class that allows creating a <see cref="Validator"/> function that takes
-    /// a generic type for its value. A <see cref="Validator"/> is a function that validates
-    /// a property in a class that inherits from <see cref="DataErrorBindableBase"/>.</summary>
-    /// <remarks>Implements <see cref="IDataErrorValidator"/>.</remarks>
-    /// <typeparam name="T">The type of property being validator.</typeparam>
+    /// <summary>Class that allows creating a <see cref="IDataErrorValidator"/> that takes
+    /// a generic type for its value. A <see cref="IDataErrorValidator"/> is used by 
+    /// <see cref="DataErrorBindableBase"/> to validate properties.</summary>
+    /// <remarks>This class provides a reusable object for creating <see cref="IDataErrorValidator"/>s. 
+    /// The alternative to using this class is to define a class that inherits <see cref="IDataErrorValidator"/>
+    /// for every property you want to validate.</remarks>
+    /// <typeparam name="T">The type of property being validated.</typeparam>
     public class DataErrorValidator<T> : IDataErrorValidator
     {
         /// <summary>Validator method.</summary>
@@ -17,7 +19,7 @@
         public Validator Method { get; set; }
 
         /// <summary>Calls the <see cref="Validator"/> function assigned to <see cref="Method"/>.</summary>
-        public bool Invoke(object value, out string errorMessage)
+        public bool Validate(object value, out string errorMessage)
         {
             return Method.Invoke((T)value, out errorMessage);
         }
