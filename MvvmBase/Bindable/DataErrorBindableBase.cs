@@ -6,59 +6,70 @@ using System.Reflection;
 
 namespace MvvmBase.Bindable
 {
-    /// <summary>
-    /// Inherits from <see cref="BindableBase"/> and implements the <see cref="IDataErrorInfo"/> interface.
-    /// </summary>
     public abstract class DataErrorBindableBase : BindableBase, IDataErrorInfo
     {
-        #region Fields and properties
-        private Dictionary<string, Func<object, string>> mValidators;
-        private string mError;
-
-        private Dictionary<string, Func<object, string>> Validators
-        {
-            get => mValidators ?? (mValidators = new Dictionary<string, Func<object, string>>());
-            set => mValidators = value;
-        }
+        #region IDataErrorInfo
         public string this[string propertyName]
         {
             get
             {
-                Error = "";
-                if (Validators.ContainsKey(propertyName))
+                // Check if there is a validator function for the property
+                if (ValidatorFunctions.ContainsKey(propertyName) && ValidatorFunctions[propertyName] != null)
                 {
-                    Type t = GetType();
-                    PropertyInfo pInfo = t.GetProperty(propertyName);
-                    Error = Validators[propertyName].Invoke(pInfo.GetValue(this));
-                    return Error;
+                    // Invoke the validator function for the property and return the error message if there is one
+                    if (!ValidatorFunctions[propertyName].Invoke(mInheritedType.GetProperty(propertyName).GetValue(this), out string errorMessage))
+                    {
+                        return errorMessage;
+                    }
                 }
-                else
-                {
-                    return Error;
-                }
+                return "";
             }
         }
         public string Error
         {
             get => mError;
-            set => mError = value;
+            private set => mError = value;
         }
         #endregion
 
-        #region Constructors
-        /// <summary>
-        /// Constructor for the <see cref="DataErrorBindableBase"/> class.
-        /// </summary>
+        #region Fields
+        private string mError;
+        private Dictionary<string, IDataErrorValidator> mValidatorFunctions;
+        private Type mInheritedType;
+        #endregion
+
+        #region Properties
+        /******************** Data ********************/
+        private Dictionary<string, IDataErrorValidator> ValidatorFunctions
+        {
+            get => mValidatorFunctions ?? (mValidatorFunctions = new Dictionary<string, IDataErrorValidator>());
+            set => mValidatorFunctions = value;
+        }
+        #endregion
+
+        #region Constructor
         public DataErrorBindableBase()
         {
-            Validators = null;
+            // Get the inherited class type
+            mInheritedType = GetType();
+
+            // Initialize properties
+            Error = "";
+            ValidatorFunctions = null;
         }
         #endregion
 
         #region Methods
-        public void AddValidator(string propertyName, Func<object, string> validatorFunc)
+        public void AddValidator(string propertyName, IDataErrorValidator validatorFunction)
         {
-            Validators.Add(propertyName, validatorFunc);
+            if (mInheritedType.GetProperty(propertyName) != null)
+            {
+                ValidatorFunctions.Add(propertyName, validatorFunction);
+            }
+            else
+            {
+                throw new ArgumentException($"The type '{mInheritedType.Name}' does not have a property named '{propertyName}'.", propertyName);
+            }
         }
         #endregion
     }

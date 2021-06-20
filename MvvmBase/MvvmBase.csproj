@@ -76,6 +76,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Bindable\DataErrorBindableBase.cs" />
+    <Compile Include="Bindable\DataErrorValidator.cs" />
+    <Compile Include="Bindable\IDataErrorValidator.cs" />
     <Compile Include="Bindable\ModelBase.cs" />
     <Compile Include="Bindable\ViewModelBase.cs" />
     <Compile Include="Events\ViewChangeRequestEvent.cs" />
