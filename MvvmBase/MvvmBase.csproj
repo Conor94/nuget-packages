@@ -80,7 +80,10 @@
     <Compile Include="Bindable\IDataErrorValidator.cs" />
     <Compile Include="Bindable\ModelBase.cs" />
     <Compile Include="Bindable\ViewModelBase.cs" />
+    <Compile Include="Converters\EnumConverter.cs" />
     <Compile Include="Events\ViewChangeRequestEvent.cs" />
+    <Compile Include="Extensions\EnumExtension.cs" />
+    <Compile Include="Extensions\TypeExtension.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
