@@ -20,38 +20,50 @@ namespace MvvmBase.Converters
     /// value.
     /// </summary>
     /// <remarks><b>How to give descriptions to enum values</b><br/>
-    /// Descriptions are given to enumeration values through a <see cref="DescriptionAttribute(string)"/>.</remarks>
+    /// Descriptions are given to enum values through a <see cref="DescriptionAttribute(string)"/>.</remarks>
     public class EnumDescriptionConverter : IValueConverter
     {
         /// <summary>
-        /// Converts single enumeration values and arrays of enumeration values to descriptions (i.e. it converts binding source to binding target). 
+        /// Converts single enum values and arrays of enum values to descriptions (i.e. it converts binding source to binding target). '
+        /// An <see cref="ArgumentException"/> is thrown if the <paramref name="value"/> is not an enum or array of enums.
         /// </summary>
         /// <remarks>
         /// Refer to <see cref="EnumExtension.GetDescription{T}(T)"/> and <see cref="EnumExtension.GetDescription(Enum, Type)"/>
         /// for more information on how this method gets a description from a <see cref="DescriptionAttribute"/>.
         /// </remarks>
         /// <inheritdoc cref="IValueConverter.Convert(object, Type, object, CultureInfo)" path="//*[not(self::returns or self::summary)]"/>
-        /// <returns><see cref="DescriptionAttribute.Description"/> for the enumeration value(s) if the enumeration value(s) had
+        /// <returns><see cref="DescriptionAttribute.Description"/> for the enum value(s) if the enum value(s) had
         /// a <see cref="DescriptionAttribute"/>.</returns>
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             Type enumType = value.GetType();
-            if (enumType.IsArray)
+
+            // Only convert the value if it is an enum or an array of enum
+            if ((enumType.IsArray && enumType.GetElementType().IsEnum) || enumType.IsEnum)
             {
-                string[] filterTypeStrings = enumType.GetElementType().GetDescriptions(DescriptionType.Field);
-                return filterTypeStrings;
+                if (enumType.IsArray)
+                {
+                    // Return descriptions for all enum values if the value is an array of enum
+                    string[] filterTypeStrings = enumType.GetElementType().GetDescriptions(DescriptionType.Field);
+                    return filterTypeStrings;
+                }
+                else
+                {
+                    // Return the description for a single enum value
+                    return ((Enum)value).GetDescription(enumType);
+                }
             }
             else
             {
-                return ((Enum)value).GetDescription(enumType);
+                throw new ArgumentException("Argument must be an enum or array of enum.", nameof(value));
             }
         }
 
         /// <summary>
-        /// Converts descriptions to enumeration values.
+        /// Converts descriptions to enum values.
         /// </summary>
         /// <inheritdoc cref="IValueConverter.Convert(object, Type, object, CultureInfo)" path="//*[not(self::returns or self::summary)]"/>
-        /// <returns>The value that corresponds to the <see cref="DescriptionAttribute"/> for the <paramref name="targetType"/> enumeration.</returns>
+        /// <returns>The value that corresponds to the <see cref="DescriptionAttribute"/> for the <paramref name="targetType"/> enum.</returns>
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if (value is string descriptionStr)
