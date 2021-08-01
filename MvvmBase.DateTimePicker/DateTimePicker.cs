@@ -189,7 +189,7 @@ namespace MvvmBase.DateTimePicker
             CalendarButtonHeight = 40;
 
             // Subscribe to events
-            Loaded += DateTimePicker_OnLoaded;
+            SizeChanged += DateTimePicker_OnSizeChanged;
         }
         #endregion
 
@@ -217,11 +217,6 @@ namespace MvvmBase.DateTimePicker
         #endregion
 
         #region Event handlers
-        private void DateTimePicker_OnLoaded(object sender, RoutedEventArgs e)
-        {
-            SizeChanged += DateTimePicker_OnSizeChanged;
-        }
-
         private void DateTimePicker_OnSizeChanged(object sender, SizeChangedEventArgs e)
         {
             ControlWidth = e.NewSize.Width;
