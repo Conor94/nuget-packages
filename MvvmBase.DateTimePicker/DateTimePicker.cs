@@ -142,7 +142,9 @@ namespace MvvmBase.DateTimePicker
             set
             {
                 SetProperty(ref mSelectedDate, value);
-                TextBoxText = mSelectedDate?.ToString("yyyy/MM/dd");
+
+                // Update the textbox with the date
+                TextBoxText = mSelectedDate?.ToString("yyyy/MM/dd hh:mm tt");
             }
         }
         public double CalendarButtonWidth
@@ -173,7 +175,7 @@ namespace MvvmBase.DateTimePicker
 
             // TextBox
             TextBoxFontSizeScaler = 0.35;
-            IsTextBoxFontSizeScalingEnabled = true;
+            IsTextBoxFontSizeScalingEnabled = false;
             TextBoxWidth = 150;
             TextBoxHeight = 40;
             TextBoxFontSize = CalculateTextBoxFontSize(TextBoxHeight);
@@ -189,7 +191,7 @@ namespace MvvmBase.DateTimePicker
             CalendarButtonHeight = 40;
 
             // Subscribe to events
-            SizeChanged += DateTimePicker_OnSizeChanged;
+            SizeChanged += OnSizeChanged;
         }
         #endregion
 
@@ -217,7 +219,7 @@ namespace MvvmBase.DateTimePicker
         #endregion
 
         #region Event handlers
-        private void DateTimePicker_OnSizeChanged(object sender, SizeChangedEventArgs e)
+        private void OnSizeChanged(object sender, SizeChangedEventArgs e)
         {
             ControlWidth = e.NewSize.Width;
             ControlHeight = e.NewSize.Height;
@@ -245,10 +247,6 @@ namespace MvvmBase.DateTimePicker
             else
             {
                 // Return the control's current font size
-                if (TextBoxFontSize == 0)
-                {
-                    return 12;
-                }
                 return TextBoxFontSize;
             }
 
