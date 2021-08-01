@@ -7,6 +7,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppConfigurationManager", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MvvmBase", "MvvmBase\MvvmBase.csproj", "{805CDD1D-B55B-46FC-8551-8F38E30A2EE7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MvvmBase.DateTimePicker", "MvvmBase.DateTimePicker\MvvmBase.DateTimePicker.csproj", "{E6A9932F-A05A-454B-A0AE-41011B2D3E73}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MvvmBase.DateTimePicker.TestProgram", "MvvmBase.DateTimePicker.TestProgram\MvvmBase.DateTimePicker.TestProgram.csproj", "{C5885E3A-0A0B-4B31-BA13-5D6ABB80F532}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +25,14 @@ Global
 		{805CDD1D-B55B-46FC-8551-8F38E30A2EE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{805CDD1D-B55B-46FC-8551-8F38E30A2EE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{805CDD1D-B55B-46FC-8551-8F38E30A2EE7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E6A9932F-A05A-454B-A0AE-41011B2D3E73}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E6A9932F-A05A-454B-A0AE-41011B2D3E73}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E6A9932F-A05A-454B-A0AE-41011B2D3E73}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E6A9932F-A05A-454B-A0AE-41011B2D3E73}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C5885E3A-0A0B-4B31-BA13-5D6ABB80F532}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C5885E3A-0A0B-4B31-BA13-5D6ABB80F532}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C5885E3A-0A0B-4B31-BA13-5D6ABB80F532}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C5885E3A-0A0B-4B31-BA13-5D6ABB80F532}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

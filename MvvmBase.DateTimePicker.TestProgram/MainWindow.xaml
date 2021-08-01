@@ -1,0 +1,19 @@
+﻿<Window
+    x:Class="TestProgram.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dateTimeControls="clr-namespace:MvvmBase.DateTimePicker;assembly=DateTimeControls"
+    xmlns:local="clr-namespace:TestProgram"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="MainWindow"
+    Width="800"
+    Height="450"
+    mc:Ignorable="d">
+    <Grid>
+        <dateTimeControls:DateTimePicker
+            Width="Auto"
+            Height="Auto"
+            Margin="48,48,404,260" />
+    </Grid>
+</Window>
