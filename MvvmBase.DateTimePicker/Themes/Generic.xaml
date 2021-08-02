@@ -66,6 +66,7 @@
                                 HorizontalOffset="225"
                                 IsOpen="{Binding IsOpenCalendarPopup, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:DateTimePicker}}}"
                                 Placement="Relative"
+                                StaysOpen="False"
                                 VerticalOffset="0">
                                 <Calendar
                                     x:Name="DateTimeCalendar"
