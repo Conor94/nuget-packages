@@ -1,6 +1,8 @@
 ﻿using Prism.Commands;
 using System;
+using System.Diagnostics;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace MvvmBase.DateTimePicker
 {
@@ -35,6 +37,8 @@ namespace MvvmBase.DateTimePicker
     /// </summary>
     public class DateTimePicker : BindableControl
     {
+        public const string DefaultDateFormat = "yyyy-MM-dd hh:mm tt";
+
         #region Fields
         // Commands
         private DelegateCommand mOpenCalendarCommand;
@@ -50,6 +54,7 @@ namespace MvvmBase.DateTimePicker
         private bool mIsTextBoxFontSizeScalingEnabled;
         private double mTextBoxWidth;
         private double mTextBoxHeight;
+        private string mDateTimeFormat;
         // Up/down buttons
         private double mUpDownButtonWidth;
         private double mUpDownButtonHeight;
@@ -89,6 +94,7 @@ namespace MvvmBase.DateTimePicker
             protected set => SetProperty(ref mControlHeight, value);
         }
         // TextBox
+        public TextBox DateTimeTextBox { get; private set; }
         public string TextBoxText
         {
             get => mTextBoxText;
@@ -97,7 +103,14 @@ namespace MvvmBase.DateTimePicker
         public double TextBoxFontSize
         {
             get => mTextBoxFontSize;
-            set => SetProperty(ref mTextBoxFontSize, value);
+            set
+            {
+                // Set to the value to the default font size if it's 0 because 0 is an invalid value.
+                if (value == 0)
+                    value = 12;
+
+                SetProperty(ref mTextBoxFontSize, value);
+            }
         }
         public double TextBoxFontSizeScaler
         {
@@ -118,6 +131,11 @@ namespace MvvmBase.DateTimePicker
         {
             get => mTextBoxHeight;
             protected set => SetProperty(ref mTextBoxHeight, value);
+        }
+        public string DateTimeFormat
+        {
+            get => mDateTimeFormat;
+            set => SetProperty(ref mDateTimeFormat, value);
         }
         // Up/down buttons
         public double UpDownButtonWidth
@@ -144,7 +162,7 @@ namespace MvvmBase.DateTimePicker
                 SetProperty(ref mSelectedDate, value);
 
                 // Update the textbox with the date
-                TextBoxText = mSelectedDate?.ToString("yyyy/MM/dd hh:mm tt");
+                TextBoxText = DateTimeFormat != null ? mSelectedDate?.ToString(DateTimeFormat) : mSelectedDate?.ToString(DefaultDateFormat);
             }
         }
         public double CalendarButtonWidth
@@ -178,7 +196,7 @@ namespace MvvmBase.DateTimePicker
             IsTextBoxFontSizeScalingEnabled = false;
             TextBoxWidth = 150;
             TextBoxHeight = 40;
-            TextBoxFontSize = CalculateTextBoxFontSize(TextBoxHeight);
+            TextBoxFontSize = 12;
 
             // Up/down buttons
             UpDownButtonWidth = 20;
@@ -186,7 +204,6 @@ namespace MvvmBase.DateTimePicker
 
             // Calendar
             IsOpenCalendarPopup = false;
-            SelectedDate = DateTime.Today;
             CalendarButtonWidth = 30;
             CalendarButtonHeight = 40;
 
@@ -194,6 +211,70 @@ namespace MvvmBase.DateTimePicker
             SizeChanged += OnSizeChanged;
         }
         #endregion
+
+        /// <summary>
+        /// Performs setup that must occur after this <see cref="Control"/> has been initialized.<para/>
+        /// 
+        /// Setup must be done in this method instead of the constructor because properties that have their value set in XAML will not
+        /// have a value yet if the property is accessed in a constructor. This is because properties that are assigned in XAML only get a
+        /// value after a <see cref="Control"/> has been initialized.
+        /// </summary>
+        public override void EndInit()
+        {
+            base.EndInit();
+
+            SelectedDate = DateTime.Today;
+        }
+
+        public override void OnApplyTemplate()
+        {
+            DateTimeTextBox = (TextBox)GetTemplateChild("DateTimeTextBox");
+            DateTimeTextBox.PreviewMouseUp += OnTextBoxMouseUp;
+            
+            base.OnApplyTemplate();
+        }
+
+        private readonly char[] DateTimeDelimiters = new char[] { ' ', ':', '-', '/' };
+
+        private void OnTextBoxMouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            string[] textTokens = DateTimeTextBox.Text.Split(' ', ':', '-', '/');
+
+            // Find the nearest delimiter on both sides
+            int minIndex = DateTimeTextBox.Text.LastIndexOfAny(DateTimeDelimiters, DateTimeTextBox.SelectionStart > 0 ? DateTimeTextBox.SelectionStart - 1 : DateTimeTextBox.SelectionStart);
+            int maxIndex = DateTimeTextBox.Text.IndexOfAny(DateTimeDelimiters, DateTimeTextBox.SelectionStart);
+
+            int startIndex;
+            int len;
+            if (minIndex <= 0) // start click  -  LastIndexOfAny() returns -1 if it does not find a delimiter
+            {
+                startIndex = 0;
+
+                len = maxIndex - minIndex - 1;
+            }
+            else
+            {
+                startIndex = minIndex + 1;
+
+                if (maxIndex <= 0) // end click
+                {
+                    maxIndex = DateTimeTextBox.Text.Length - 1;
+                    len = maxIndex - minIndex;
+                }
+                else // middle click
+                {
+                    len = maxIndex - minIndex - 1;
+                }
+            }
+
+            DateTimeTextBox.Select(startIndex, len);
+
+            Debug.WriteLine($"SelectionStart = {DateTimeTextBox.SelectionStart}\n" +
+                $"SelectionLength = {DateTimeTextBox.SelectionLength}\n" +
+                $"Text = {DateTimeTextBox.Text}\n" +
+                $"minIndex = {minIndex}\n" +
+                $"maxIndex = {maxIndex}");
+        }
 
         #region Commands
         private void OpenCalendarExecute()
@@ -224,32 +305,31 @@ namespace MvvmBase.DateTimePicker
             ControlWidth = e.NewSize.Width;
             ControlHeight = e.NewSize.Height;
 
-            TextBoxWidth = ControlWidth - UpDownButtonWidth - CalendarButtonWidth;
+            TextBoxWidth = CalculateTextBoxWidth();
             TextBoxHeight = ControlHeight;
-            TextBoxFontSize = CalculateTextBoxFontSize(TextBoxHeight);
-            UpDownButtonHeight = CalculateUpDownButtonHeight(ControlHeight);
+            UpDownButtonHeight = CalculateUpDownButtonHeight();
             CalendarButtonHeight = ControlHeight;
+
+            // Change font size if scaling is enabled
+            if (IsTextBoxFontSizeScalingEnabled)
+                TextBoxFontSize = CalculateTextBoxFontSize();
         }
         #endregion
 
         #region Helpers
-        private double CalculateUpDownButtonHeight(double controlHeight)
+        private double CalculateTextBoxWidth()
         {
-            return controlHeight / 2;
+            return ControlWidth - UpDownButtonWidth - CalendarButtonWidth;
         }
 
-        private double CalculateTextBoxFontSize(double textBoxHeight)
+        private double CalculateUpDownButtonHeight()
         {
-            if (IsTextBoxFontSizeScalingEnabled)
-            {
-                return textBoxHeight * TextBoxFontSizeScaler;
-            }
-            else
-            {
-                // Return the control's current font size
-                return TextBoxFontSize;
-            }
+            return ControlHeight / 2;
+        }
 
+        private double CalculateTextBoxFontSize()
+        {
+            return TextBoxHeight * TextBoxFontSizeScaler;
         }
         #endregion
     }
