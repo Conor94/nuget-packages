@@ -1,8 +1,8 @@
 ﻿using Prism.Commands;
 using System;
-using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace MvvmBase.DateTimePicker
 {
@@ -37,7 +37,19 @@ namespace MvvmBase.DateTimePicker
     /// </summary>
     public class DateTimePicker : BindableControl
     {
+        #region Constants
         public const string DefaultDateFormat = "yyyy-MM-dd hh:mm tt";
+        public const int DefaultFontSize = 12;
+        private readonly char[] DateTimeDelimiters = new char[] { ' ', ':', '-', '/' };
+        #endregion
+
+        #region Fields without properties
+        // Fields that don't have properties. These fields are not accessible by users of the control.
+
+        // TextBox
+        private int mSelectedTextStartIndex; // This field has no public property
+        private int mSelectedTextLength;     // This field has no public property
+        #endregion
 
         #region Fields
         // Commands
@@ -107,7 +119,7 @@ namespace MvvmBase.DateTimePicker
             {
                 // Set to the value to the default font size if it's 0 because 0 is an invalid value.
                 if (value == 0)
-                    value = 12;
+                    value = DefaultFontSize;
 
                 SetProperty(ref mTextBoxFontSize, value);
             }
@@ -162,7 +174,7 @@ namespace MvvmBase.DateTimePicker
                 SetProperty(ref mSelectedDate, value);
 
                 // Update the textbox with the date
-                TextBoxText = DateTimeFormat != null ? mSelectedDate?.ToString(DateTimeFormat) : mSelectedDate?.ToString(DefaultDateFormat);
+                TextBoxText = mSelectedDate?.ToString(DateTimeFormat);
             }
         }
         public double CalendarButtonWidth
@@ -205,13 +217,14 @@ namespace MvvmBase.DateTimePicker
             // Calendar
             IsOpenCalendarPopup = false;
             CalendarButtonWidth = 30;
-            CalendarButtonHeight = 40;
+            CalendarButtonHeight = 40;            
 
             // Subscribe to events
             SizeChanged += OnSizeChanged;
         }
         #endregion
 
+        #region Setup
         /// <summary>
         /// Performs setup that must occur after this <see cref="Control"/> has been initialized.<para/>
         /// 
@@ -223,58 +236,19 @@ namespace MvvmBase.DateTimePicker
         {
             base.EndInit();
 
-            SelectedDate = DateTime.Today;
+            DateTimeFormat = DateTimeFormat ?? DefaultDateFormat;
+
+            SelectedDate = SelectedDate ?? DateTime.Today;
         }
 
         public override void OnApplyTemplate()
         {
             DateTimeTextBox = (TextBox)GetTemplateChild("DateTimeTextBox");
             DateTimeTextBox.PreviewMouseUp += OnTextBoxMouseUp;
-            
+
             base.OnApplyTemplate();
         }
-
-        private readonly char[] DateTimeDelimiters = new char[] { ' ', ':', '-', '/' };
-
-        private void OnTextBoxMouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            string[] textTokens = DateTimeTextBox.Text.Split(' ', ':', '-', '/');
-
-            // Find the nearest delimiter on both sides
-            int minIndex = DateTimeTextBox.Text.LastIndexOfAny(DateTimeDelimiters, DateTimeTextBox.SelectionStart > 0 ? DateTimeTextBox.SelectionStart - 1 : DateTimeTextBox.SelectionStart);
-            int maxIndex = DateTimeTextBox.Text.IndexOfAny(DateTimeDelimiters, DateTimeTextBox.SelectionStart);
-
-            int startIndex;
-            int len;
-            if (minIndex <= 0) // start click  -  LastIndexOfAny() returns -1 if it does not find a delimiter
-            {
-                startIndex = 0;
-
-                len = maxIndex - minIndex - 1;
-            }
-            else
-            {
-                startIndex = minIndex + 1;
-
-                if (maxIndex <= 0) // end click
-                {
-                    maxIndex = DateTimeTextBox.Text.Length - 1;
-                    len = maxIndex - minIndex;
-                }
-                else // middle click
-                {
-                    len = maxIndex - minIndex - 1;
-                }
-            }
-
-            DateTimeTextBox.Select(startIndex, len);
-
-            Debug.WriteLine($"SelectionStart = {DateTimeTextBox.SelectionStart}\n" +
-                $"SelectionLength = {DateTimeTextBox.SelectionLength}\n" +
-                $"Text = {DateTimeTextBox.Text}\n" +
-                $"minIndex = {minIndex}\n" +
-                $"maxIndex = {maxIndex}");
-        }
+        #endregion
 
         #region Commands
         private void OpenCalendarExecute()
@@ -286,7 +260,8 @@ namespace MvvmBase.DateTimePicker
         {
             if (SelectedDate.HasValue)
             {
-                SelectedDate = SelectedDate.Value.AddDays(1);
+                // Check which part of the date/time is selected
+                ChangeDateTime(1);
             }
         }
 
@@ -294,7 +269,7 @@ namespace MvvmBase.DateTimePicker
         {
             if (SelectedDate.HasValue)
             {
-                SelectedDate = SelectedDate.Value.AddDays(-1);
+                ChangeDateTime(-1);
             }
         }
         #endregion
@@ -314,9 +289,100 @@ namespace MvvmBase.DateTimePicker
             if (IsTextBoxFontSizeScalingEnabled)
                 TextBoxFontSize = CalculateTextBoxFontSize();
         }
+
+        private void OnTextBoxMouseUp(object sender, MouseButtonEventArgs e)
+        {
+            // Find the nearest delimiter on both sides
+            int minIndex = DateTimeTextBox.Text.LastIndexOfAny(DateTimeDelimiters, DateTimeTextBox.SelectionStart > 0 ? DateTimeTextBox.SelectionStart - 1 : DateTimeTextBox.SelectionStart);
+            int maxIndex = DateTimeTextBox.Text.IndexOfAny(DateTimeDelimiters, DateTimeTextBox.SelectionStart);
+
+            if (minIndex <= 0) // start click  -  LastIndexOfAny() returns -1 if it does not find a delimiter
+            {
+                mSelectedTextStartIndex = 0;
+
+                mSelectedTextLength = maxIndex - minIndex - 1;
+            }
+            else
+            {
+                mSelectedTextStartIndex = minIndex + 1;
+
+                if (maxIndex <= 0) // end click
+                {
+                    mSelectedTextLength = DateTimeTextBox.Text.Length - minIndex - 1;
+                }
+                else // middle click
+                {
+                    mSelectedTextLength = maxIndex - minIndex - 1;
+                }
+            }
+            
+            // Select the date/time part
+            DateTimeTextBox.Select(mSelectedTextStartIndex, mSelectedTextLength);
+
+            // Store the selected type of date/time part (e.g. year, month, day, or hour).
+            // ChangeDateTime() uses this to know which part of the date/time to increment or decrement.
+            mSelectedDateTimePart = DateTimeFormat.Substring(mSelectedTextStartIndex, mSelectedTextLength);
+            
+            
+            //Debug.WriteLine(mSelectedDateTimePart);
+
+            //Debug.WriteLine($"SelectionStart = {DateTimeTextBox.SelectionStart}\n" +
+            //    $"SelectionLength = {DateTimeTextBox.SelectionLength}\n" +
+            //    $"Text = {DateTimeTextBox.Text}\n" +
+            //    $"minIndex = {minIndex}\n" +
+            //    $"maxIndex = {maxIndex}");
+        }
         #endregion
 
         #region Helpers
+        private string mSelectedDateTimePart;
+
+        private void ChangeDateTime(int amount)
+        {
+            string selectedText = DateTimeTextBox.SelectedText;
+
+            switch (mSelectedDateTimePart)
+            {
+                case "yyyy":
+                case "yy":
+                    SelectedDate = SelectedDate.Value.AddYears(amount);
+                    break;
+
+                case "mm":
+                    SelectedDate = SelectedDate.Value.AddMinutes(amount);
+                    break;
+
+                case "dd":
+                    SelectedDate = SelectedDate.Value.AddDays(amount);
+                    break;
+
+                case "hh":
+                    SelectedDate = SelectedDate.Value.AddHours(amount);
+                    break;
+
+                case "MM":
+                    SelectedDate = SelectedDate.Value.AddMonths(amount);
+                    break;
+
+                case "ss":
+                    SelectedDate = SelectedDate.Value.AddSeconds(amount);
+                    break;
+
+                case "tt":
+                    if (DateTimeTextBox.SelectedText == "AM")
+                        TextBoxText = DateTimeTextBox.Text.Replace("AM", "PM");
+                    else
+                        TextBoxText = DateTimeTextBox.Text.Replace("PM", "AM");
+                    break;
+
+                default:
+                    throw new Exception("Date time part is not valid.");
+            }
+
+            DateTimeTextBox.Focus();
+            DateTimeTextBox.Select(mSelectedTextStartIndex, mSelectedTextLength);
+        }
+
         private double CalculateTextBoxWidth()
         {
             return ControlWidth - UpDownButtonWidth - CalendarButtonWidth;
