@@ -72,7 +72,7 @@ namespace MvvmBase.DateTimePicker
         private double mUpDownButtonHeight;
         // Calendar
         private bool mIsOpenCalendarPopup;
-        private DateTime? mSelectedDate;
+        private DateTime? mCurrentDateTime;
         private double mCalendarButtonWidth;
         private double mCalendarButtonHeight;
         #endregion
@@ -166,15 +166,15 @@ namespace MvvmBase.DateTimePicker
             get => mIsOpenCalendarPopup;
             set => SetProperty(ref mIsOpenCalendarPopup, value);
         }
-        public DateTime? SelectedDate
+        public DateTime? CurrentDateTime
         {
-            get => mSelectedDate;
+            get => mCurrentDateTime;
             set
             {
-                SetProperty(ref mSelectedDate, value);
+                SetProperty(ref mCurrentDateTime, value);
 
                 // Update the textbox with the date
-                TextBoxText = mSelectedDate?.ToString(DateTimeFormat);
+                TextBoxText = mCurrentDateTime?.ToString(DateTimeFormat);
             }
         }
         public double CalendarButtonWidth
@@ -238,7 +238,7 @@ namespace MvvmBase.DateTimePicker
 
             DateTimeFormat = DateTimeFormat ?? DefaultDateFormat;
 
-            SelectedDate = SelectedDate ?? DateTime.Today;
+            CurrentDateTime = CurrentDateTime ?? DateTime.Today;
         }
 
         public override void OnApplyTemplate()
@@ -251,23 +251,26 @@ namespace MvvmBase.DateTimePicker
         #endregion
 
         #region Commands
+        /// <summary>Toggles the <see cref="IsOpenCalendarPopup"/> bool when the calendar is opened.</summary>
         private void OpenCalendarExecute()
         {
             IsOpenCalendarPopup = !IsOpenCalendarPopup;
         }
 
+        /// <summary>Increases the selected date/time part.</summary>
         private void UpButtonExecute()
         {
-            if (SelectedDate.HasValue)
+            if (CurrentDateTime.HasValue)
             {
                 // Check which part of the date/time is selected
                 ChangeDateTime(1);
             }
         }
 
+        /// <summary>Decreases the selected date/time part.</summary>
         private void DownButtonExecute()
         {
-            if (SelectedDate.HasValue)
+            if (CurrentDateTime.HasValue)
             {
                 ChangeDateTime(-1);
             }
@@ -275,6 +278,7 @@ namespace MvvmBase.DateTimePicker
         #endregion
 
         #region Event handlers
+        /// <summary>Resizes controls when the size of this <see cref="DateTimePicker"/> changes.</summary>
         private void OnSizeChanged(object sender, SizeChangedEventArgs e)
         {
             ControlWidth = e.NewSize.Width;
@@ -290,6 +294,8 @@ namespace MvvmBase.DateTimePicker
                 TextBoxFontSize = CalculateTextBoxFontSize();
         }
 
+        /// <summary>Selects a date/time part when the textbox is clicked. The purpose of this is to allow selecting a
+        /// part of the date/time (e.g. year, minutes, etc.) without double-clicking.</summary>
         private void OnTextBoxMouseUp(object sender, MouseButtonEventArgs e)
         {
             // Find the nearest delimiter on both sides
@@ -322,21 +328,18 @@ namespace MvvmBase.DateTimePicker
             // Store the selected type of date/time part (e.g. year, month, day, or hour).
             // ChangeDateTime() uses this to know which part of the date/time to increment or decrement.
             mSelectedDateTimePart = DateTimeFormat.Substring(mSelectedTextStartIndex, mSelectedTextLength);
-            
-            
-            //Debug.WriteLine(mSelectedDateTimePart);
-
-            //Debug.WriteLine($"SelectionStart = {DateTimeTextBox.SelectionStart}\n" +
-            //    $"SelectionLength = {DateTimeTextBox.SelectionLength}\n" +
-            //    $"Text = {DateTimeTextBox.Text}\n" +
-            //    $"minIndex = {minIndex}\n" +
-            //    $"maxIndex = {maxIndex}");
         }
         #endregion
 
         #region Helpers
         private string mSelectedDateTimePart;
 
+        /// <summary>
+        /// Increases or decreases the selected part of the <see cref="CurrentDateTime"/>.
+        /// </summary>
+        /// <remarks>Pass in a positive value for <paramref name="amount"/> to increase the selected part, and
+        /// a negative value for <paramref name="amount"/> to decrease the selected part.</remarks>
+        /// <param name="amount">The number of units to increase/decrease.</param>
         private void ChangeDateTime(int amount)
         {
             string selectedText = DateTimeTextBox.SelectedText;
@@ -345,27 +348,27 @@ namespace MvvmBase.DateTimePicker
             {
                 case "yyyy":
                 case "yy":
-                    SelectedDate = SelectedDate.Value.AddYears(amount);
+                    CurrentDateTime = CurrentDateTime.Value.AddYears(amount);
                     break;
 
                 case "mm":
-                    SelectedDate = SelectedDate.Value.AddMinutes(amount);
+                    CurrentDateTime = CurrentDateTime.Value.AddMinutes(amount);
                     break;
 
                 case "dd":
-                    SelectedDate = SelectedDate.Value.AddDays(amount);
+                    CurrentDateTime = CurrentDateTime.Value.AddDays(amount);
                     break;
 
                 case "hh":
-                    SelectedDate = SelectedDate.Value.AddHours(amount);
+                    CurrentDateTime = CurrentDateTime.Value.AddHours(amount);
                     break;
 
                 case "MM":
-                    SelectedDate = SelectedDate.Value.AddMonths(amount);
+                    CurrentDateTime = CurrentDateTime.Value.AddMonths(amount);
                     break;
 
                 case "ss":
-                    SelectedDate = SelectedDate.Value.AddSeconds(amount);
+                    CurrentDateTime = CurrentDateTime.Value.AddSeconds(amount);
                     break;
 
                 case "tt":
@@ -383,16 +386,19 @@ namespace MvvmBase.DateTimePicker
             DateTimeTextBox.Select(mSelectedTextStartIndex, mSelectedTextLength);
         }
 
+        /// <summary>Calculates the width of the textbox so that it can scale with the size of this <see cref="DateTimePicker"/>.</summary>
         private double CalculateTextBoxWidth()
         {
             return ControlWidth - UpDownButtonWidth - CalendarButtonWidth;
         }
 
+        /// <summary>Calculates the height of the up/down buttons so that they can scale with the size of this <see cref="DateTimePicker"/>.</summary>
         private double CalculateUpDownButtonHeight()
         {
             return ControlHeight / 2;
         }
 
+        /// <summary>Uses the <see cref="TextBoxFontSizeScaler"/> value to scale the textbox font size.</summary>
         private double CalculateTextBoxFontSize()
         {
             return TextBoxHeight * TextBoxFontSizeScaler;

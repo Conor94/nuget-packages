@@ -72,7 +72,7 @@
                                     x:Name="DateTimeCalendar"
                                     Width="200"
                                     Height="200"
-                                    SelectedDate="{Binding SelectedDate, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:DateTimePicker}}}"
+                                    SelectedDate="{Binding CurrentDateTime, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:DateTimePicker}}}"
                                     SelectionMode="SingleDate" />
                             </Popup>
                         </StackPanel>
