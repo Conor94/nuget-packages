@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
 
-namespace MvvmBase.Extensions
+namespace PrismMvvmBase.Extensions
 {
     public enum DescriptionType
     {

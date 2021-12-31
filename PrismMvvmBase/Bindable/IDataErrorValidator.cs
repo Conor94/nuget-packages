@@ -1,4 +1,4 @@
-﻿namespace MvvmBase.Bindable
+﻿namespace PrismMvvmBase.Bindable
 {
     /// <summary>
     /// Provides a function that is used by <see cref="DataErrorBindableBase"/> to validate properties.

@@ -1,4 +1,4 @@
-﻿namespace MvvmBase
+﻿namespace PrismMvvmBase
 {
     class Program
     {

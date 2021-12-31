@@ -3,12 +3,12 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Reflection;
 using System.Windows.Data;
-using MvvmBase.Extensions;
+using PrismMvvmBase.Extensions;
 using System.Windows.Controls;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace MvvmBase.Converters
+namespace PrismMvvmBase.Converters
 {
     /// <summary>
     /// Converts enum values to descriptions and vice versa. This class cannot convert more than one 

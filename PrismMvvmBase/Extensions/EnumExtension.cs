@@ -2,7 +2,7 @@
 using System.ComponentModel;
 using System.Reflection;
 
-namespace MvvmBase.Extensions
+namespace PrismMvvmBase.Extensions
 {
     public static class EnumExtension
     {

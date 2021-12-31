@@ -1,7 +1,7 @@
 ﻿using Prism.Events;
-using MvvmBase.Bindable;
+using PrismMvvmBase.Bindable;
 
-namespace MvvmBase.Events
+namespace PrismMvvmBase.Events
 {
     public class ViewChangeRequestEvent : PubSubEvent<ViewModelBase>
     {

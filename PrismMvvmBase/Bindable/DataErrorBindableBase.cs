@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 
-namespace MvvmBase.Bindable
+namespace PrismMvvmBase.Bindable
 {
     /// <summary>
     /// <see cref="BindableBase"/> that also inherits <see cref="IDataErrorInfo"/>. This class provides the ability to

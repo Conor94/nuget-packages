@@ -4,11 +4,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("MvvmBase")]
+[assembly: AssemblyTitle("PrismMvvmBase")]
 [assembly: AssemblyDescription("This packages expands the Prism class heirarchy to include model and view model base classes. These classes inherit from a class called DataErrorBindableBase, which implements IDataErrorInfo. This allows classes that derive from ModelBase, ViewModelBase, or DataErrorBindableBase to implement custom validation logic and display custom validation results (e.g. error messages, or highlighting a TextBox control in red).")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Conor Barr")]
-[assembly: AssemblyProduct("MvvmBase")]
+[assembly: AssemblyProduct("PrismMvvmBase")]
 [assembly: AssemblyCopyright("Copyright ©  2021")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

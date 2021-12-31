@@ -1,4 +1,4 @@
-﻿namespace MvvmBase.Bindable
+﻿namespace PrismMvvmBase.Bindable
 {
     /// <summary>Class that allows creating a <see cref="IDataErrorValidator"/> that takes
     /// a generic type for its value. A <see cref="IDataErrorValidator"/> is used by 
