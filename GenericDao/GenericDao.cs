@@ -1,5 +1,5 @@
 ﻿using Microsoft.Data.Sqlite;
-using SqlLiteExample.Models;
+using GenericDao.Models;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -8,8 +8,9 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using GenericDao.Adapters;
 
-namespace SqlLiteExample
+namespace GenericDao
 {
     /// <summary>
     /// Generic data access object for SQL and SQLite databases. 
@@ -22,9 +23,13 @@ namespace SqlLiteExample
         private Type dbCommandType;
         private Type dbParameterType;
 
+        private WhereAdapter whereAdapter;
+
         public GenericDao(string connstr)
         {
             CONN_STR = connstr;
+
+            whereAdapter = new WhereAdapter();
 
             if (typeof(TDatabase) == typeof(SqliteConnection))
             {
@@ -107,7 +112,7 @@ namespace SqlLiteExample
             }, parameters);
         }
 
-        public List<T> ReadData<T>(string tableName, Func<DbDataReader, T> converter, string[] columnNames, WhereCondition[] conditions = null, OrderBy? orderBy = null)
+        public List<T> ReadData<T>(string tableName, Func<DbDataReader, T> converter, string[] columnNames, WhereCondition[] conditions = null, OrderBy orderBy = null)
         {
             string commandText = $"SELECT {(columnNames == null ? "*" : string.Join(",", columnNames))} FROM {tableName}{(conditions != null ? " WHERE" : "")}";
 
@@ -120,7 +125,7 @@ namespace SqlLiteExample
 
             if (orderBy != null)
             {
-                commandText += $" ORDER BY {string.Join(",", orderBy.Value.Columns)} {orderBy.Value.Direction}";
+                commandText += $" ORDER BY {string.Join(",", orderBy.Columns)} {orderBy.Direction}";
             }
 
             return (List<T>)ExecuteCommand(commandText, (command) =>
@@ -137,7 +142,7 @@ namespace SqlLiteExample
             }, parameters);
         }
 
-        public List<T> ReadData<T>(string tableName, Func<DbDataReader, T> converter, WhereCondition[] conditions = null, OrderBy? orderBy = null)
+        public List<T> ReadData<T>(string tableName, Func<DbDataReader, T> converter, WhereCondition[] conditions = null, OrderBy orderBy = null)
         {
             return ReadData(tableName, converter, null, conditions, orderBy);
         }
@@ -186,7 +191,17 @@ namespace SqlLiteExample
 
                 parameters.Add(parameter);
 
-                where += $"{conditions[i].LeftSide} = @{conditions[i].LeftSide}";
+                string comparisonOperator = "";
+                try
+                {
+                    comparisonOperator = whereAdapter.ConvertOperator(conditions[i].ComparisonOperator);
+                }
+                catch (Exception)
+                {
+                    throw new Exception("Query failed because the comparison operator could not be converted.");
+                }
+
+                where += $"{conditions[i].LeftSide} {comparisonOperator} @{conditions[i].LeftSide}";
                 if (i != (conditions.Length - 1))
                 {
                     where += ",";

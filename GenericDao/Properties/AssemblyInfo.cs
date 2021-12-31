@@ -6,9 +6,9 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("GenericDao")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Generic data access object (DAO) for SQLite and SQL.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("Conor Barr")]
 [assembly: AssemblyProduct("GenericDao")]
 [assembly: AssemblyCopyright("Copyright ©  2021")]
 [assembly: AssemblyTrademark("")]

@@ -1,4 +1,4 @@
-﻿namespace SqlLiteExample.Enums
+﻿namespace GenericDao.Enums
 {
     public enum OrderByDirection
     {
