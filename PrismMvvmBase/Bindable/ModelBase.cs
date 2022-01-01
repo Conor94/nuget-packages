@@ -6,6 +6,14 @@ namespace PrismMvvmBase.Bindable
     {
         protected bool mIsDisposed;
 
+        private bool mIsSelected;
+
+        public bool IsSelected
+        {
+            get => mIsSelected;
+            set => SetProperty(ref mIsSelected, value);
+        }
+
         public ModelBase() : base()
         {
         }
