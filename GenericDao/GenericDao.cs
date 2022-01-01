@@ -49,7 +49,7 @@ namespace GenericDao
 
         public bool CreateTable(string tableName, string columns)
         {
-            return (bool)ExecuteCommand($"CREATE TABLE IF NOT EXISTS {tableName} ({columns})", (command) =>
+            return ExecuteCommand<bool>($"CREATE TABLE IF NOT EXISTS {tableName} ({columns})", (command) =>
             {
                 if (command.ExecuteNonQuery() > 0)
                 {
@@ -98,7 +98,7 @@ namespace GenericDao
                 valsArray[i] = parameters[i].ParameterName;
             }
 
-            return (bool)ExecuteCommand($"INSERT INTO {tableName} ({string.Join(",", colsArray)}) VALUES ({string.Join(",", valsArray)})", (command) =>
+            return ExecuteCommand<bool>($"INSERT INTO {tableName} ({string.Join(",", colsArray)}) VALUES ({string.Join(",", valsArray)})", (command) =>
             {
                 if (command.ExecuteNonQuery() > 0)
                 {
@@ -111,17 +111,16 @@ namespace GenericDao
             }, parameters);
         }
 
-        public int UpdateData<T>(string tableName, T data)
+        public int UpdateData<TData>(string tableName, TData data)
         {
-            return (int)ExecuteCommand((command) =>
+            return ExecuteCommand<int>((command) =>
             {
-                int totalRecordsAffected = 0;
-
-                // Begin a transaction
+                int recordsAffected = 0;
 
                 PropertyInfo[] propInfo = data.GetType().GetProperties();
                 DataRowCollection colMetadata = GetColumnMetadata(tableName);
 
+                // Need to make sure we have the primary key before doing any updates
                 DbParameter primaryKeyParameter = (DbParameter)Activator.CreateInstance(dbParameterType);
                 string primaryKeyColName = "";
                 for (int i = 0; i < colMetadata.Count; i++)
@@ -139,10 +138,11 @@ namespace GenericDao
                         primaryKeyParameter.Value = prop.GetValue(data);
                     }
                 }
-
-
                 
-                command.Transaction = command.Connection.BeginTransaction();
+                // Execute an update statement for each column. Separate update statements are used so that only columns that are
+                // actually changed get updated. The way this is being done prevents updating all columns in a single statement
+                // (if one column isn't changed, it would prevent all columns from being changed).
+                command.Transaction = command.Connection.BeginTransaction(); // Perform all update statements in a single transaction
                 for (int i = 0; i < colMetadata.Count; i++)
                 {
                     DataRow col = colMetadata[i];
@@ -159,28 +159,21 @@ namespace GenericDao
                     }
 
                     command.CommandText = $"UPDATE {tableName} " +
-                                          $"SET {colName} = @{colName} " + // todo change colName and @colName to variables
+                                          $"SET {colName} = @{colName} " +
                                           $"WHERE {colName} != @{colName} AND {primaryKeyColName} = @{primaryKeyColName}";
-                    command.Parameters.Add(parameter); // add parameters for a single update statement
+                    command.Parameters.Add(parameter);
                     
-                    int recordsAffected = command.ExecuteNonQuery(); // execute a single update statement
-
-                    if (recordsAffected > 0)
-                    {
-                        totalRecordsAffected += recordsAffected;
-                    }
+                    recordsAffected += command.ExecuteNonQuery();
                 }
+                command.Transaction.Commit(); // Commit all update statements
 
-                // Commit all update statements
-                command.Transaction.Commit();
-
-                return totalRecordsAffected;
+                return recordsAffected;
             });
 
 
         }
 
-        public List<T> ReadData<T>(string tableName, Func<DbDataReader, T> converter, string[] columnNames, WhereCondition[] conditions = null, OrderBy orderBy = null)
+        public List<TData> ReadData<TData>(string tableName, Func<DbDataReader, TData> converter, string[] columnNames, WhereCondition[] conditions = null, OrderBy orderBy = null)
         {
             string commandText = $"SELECT {(columnNames == null ? "*" : string.Join(",", columnNames))} FROM {tableName}{(conditions != null ? " WHERE" : "")}";
 
@@ -196,11 +189,11 @@ namespace GenericDao
                 commandText += $" ORDER BY {string.Join(",", orderBy.Columns)} {orderBy.Direction}";
             }
 
-            return (List<T>)ExecuteCommand(commandText, (command) =>
+            return ExecuteCommand<List<TData>>(commandText, (command) =>
             {
                 DbDataReader reader = command.ExecuteReader();
 
-                List<T> data = new List<T>();
+                List<TData> data = new List<TData>();
                 while (reader.Read())
                 {
                     data.Add(converter(reader));
@@ -210,13 +203,13 @@ namespace GenericDao
             }, parameters);
         }
 
-        public List<T> ReadData<T>(string tableName, Func<DbDataReader, T> converter, WhereCondition[] conditions = null, OrderBy orderBy = null)
+        public List<TData> ReadData<TData>(string tableName, Func<DbDataReader, TData> converter, WhereCondition[] conditions = null, OrderBy orderBy = null)
         {
             return ReadData(tableName, converter, null, conditions, orderBy);
         }
 
         // Creates a connection, opens it, and creates a command that uses the connection. This function also adds command text and parameters to the command.
-        private object ExecuteCommand(string commandText, Func<DbCommand, object> invoker, List<IDbDataParameter> parameters = null)
+        private TReturn ExecuteCommand<TReturn>(string commandText, Func<DbCommand, object> invoker, List<IDbDataParameter> parameters = null)
         {
             using (DbConnection conn = (DbConnection)Activator.CreateInstance(typeof(TDatabase)))
             {
@@ -232,13 +225,13 @@ namespace GenericDao
                         command.Parameters.AddRange(parameters.ToArray());
                     }
 
-                    return invoker.DynamicInvoke(command);
+                    return (TReturn)invoker.DynamicInvoke(command);
                 }
             }
         }
 
         // Creates a connection, opens it, and creates a command that uses the connection.
-        private object ExecuteCommand(Func<DbCommand, object> invoker)
+        private TReturn ExecuteCommand<TReturn>(Func<DbCommand, object> invoker)
         {
             using (DbConnection conn = (DbConnection)Activator.CreateInstance(typeof(TDatabase)))
             {
@@ -249,14 +242,14 @@ namespace GenericDao
 
                     command.Connection = conn;
 
-                    return invoker.DynamicInvoke(command);
+                    return (TReturn)invoker.DynamicInvoke(command);
                 }
             }
         }
 
         private DataRowCollection GetColumnMetadata(string tableName)
         {
-            return (DataRowCollection)ExecuteCommand($"SELECT * FROM {tableName} WHERE 1 = 0", (command) =>
+            return ExecuteCommand<DataRowCollection>($"SELECT * FROM {tableName} WHERE 1 = 0", (command) =>
             {
                 DbDataReader reader = command.ExecuteReader();
 
