@@ -65,6 +65,8 @@ namespace GenericDao
         public bool InsertData<T>(string tableName, T data)
         {
             List<IDbDataParameter> parameters = new List<IDbDataParameter>();
+            
+            PropertyInfo[] propInfo = data.GetType().GetProperties();
 
             DataRowCollection colMetadata = GetColumnMetadata(tableName);
             for (int i = 0; i < colMetadata.Count; i++)
@@ -73,21 +75,18 @@ namespace GenericDao
 
                 if (!(bool)col[SchemaTableOptionalColumn.IsAutoIncrement])
                 {
-                    DbParameter parameter = (DbParameter)Activator.CreateInstance(dbParameterType);
-                    parameter.ParameterName = $"@{col[SchemaTableColumn.ColumnName]}";
-                    parameters.Add(parameter);
-                }
-            }
+                    string colName = col[SchemaTableColumn.ColumnName].ToString();
 
-            StringBuilder valueBuilder = new StringBuilder();
-            PropertyInfo[] propInfo = data.GetType().GetProperties();
-            for (int i = 0; i < parameters.Count; i++)
-            {
-                // Look for a property in the data object that matches the parameter name
-                PropertyInfo prop = propInfo.ToList().Find(p => p.Name == parameters[i].ParameterName.Replace("@", ""));
-                if (prop != null)
-                {
-                    parameters[i].Value = prop.GetValue(data);
+                    DbParameter parameter = (DbParameter)Activator.CreateInstance(dbParameterType);
+                    parameter.ParameterName = $"@{colName}";
+                    parameters.Add(parameter);
+
+                    PropertyInfo prop = propInfo.ToList().Find(p => p.Name == colName);
+
+                    if (prop != null)
+                    {
+                        parameter.Value = prop.GetValue(data);
+                    }
                 }
             }
 
@@ -110,6 +109,75 @@ namespace GenericDao
                     return false;
                 }
             }, parameters);
+        }
+
+        public int UpdateData<T>(string tableName, T data)
+        {
+            return (int)ExecuteCommand((command) =>
+            {
+                int totalRecordsAffected = 0;
+
+                // Begin a transaction
+
+                PropertyInfo[] propInfo = data.GetType().GetProperties();
+                DataRowCollection colMetadata = GetColumnMetadata(tableName);
+
+                DbParameter primaryKeyParameter = (DbParameter)Activator.CreateInstance(dbParameterType);
+                string primaryKeyColName = "";
+                for (int i = 0; i < colMetadata.Count; i++)
+                {
+                    // Get primary key column name so it can be used in the WHERE statement
+                    if ((bool)colMetadata[i][SchemaTableOptionalColumn.IsAutoIncrement])
+                    {
+                        primaryKeyColName = colMetadata[i][SchemaTableColumn.ColumnName].ToString();
+
+                        // Assign column name to parameter
+                        primaryKeyParameter.ParameterName = $"@{primaryKeyColName}";
+
+                        // Assign value to parameter
+                        PropertyInfo prop = propInfo.ToList().Find(p => p.Name == primaryKeyColName);
+                        primaryKeyParameter.Value = prop.GetValue(data);
+                    }
+                }
+
+
+                
+                command.Transaction = command.Connection.BeginTransaction();
+                for (int i = 0; i < colMetadata.Count; i++)
+                {
+                    DataRow col = colMetadata[i];
+
+                    string colName = col[SchemaTableColumn.ColumnName].ToString();
+
+                    // Add parameter name and value
+                    DbParameter parameter = (DbParameter)Activator.CreateInstance(dbParameterType);
+                    parameter.ParameterName = $"@{colName}";
+                    PropertyInfo prop = propInfo.ToList().Find(p => p.Name == colName);
+                    if (prop != null)
+                    {
+                        parameter.Value = prop.GetValue(data);
+                    }
+
+                    command.CommandText = $"UPDATE {tableName} " +
+                                          $"SET {colName} = @{colName} " + // todo change colName and @colName to variables
+                                          $"WHERE {colName} != @{colName} AND {primaryKeyColName} = @{primaryKeyColName}";
+                    command.Parameters.Add(parameter); // add parameters for a single update statement
+                    
+                    int recordsAffected = command.ExecuteNonQuery(); // execute a single update statement
+
+                    if (recordsAffected > 0)
+                    {
+                        totalRecordsAffected += recordsAffected;
+                    }
+                }
+
+                // Commit all update statements
+                command.Transaction.Commit();
+
+                return totalRecordsAffected;
+            });
+
+
         }
 
         public List<T> ReadData<T>(string tableName, Func<DbDataReader, T> converter, string[] columnNames, WhereCondition[] conditions = null, OrderBy orderBy = null)
@@ -147,6 +215,7 @@ namespace GenericDao
             return ReadData(tableName, converter, null, conditions, orderBy);
         }
 
+        // Creates a connection, opens it, and creates a command that uses the connection. This function also adds command text and parameters to the command.
         private object ExecuteCommand(string commandText, Func<DbCommand, object> invoker, List<IDbDataParameter> parameters = null)
         {
             using (DbConnection conn = (DbConnection)Activator.CreateInstance(typeof(TDatabase)))
@@ -162,6 +231,23 @@ namespace GenericDao
                     {
                         command.Parameters.AddRange(parameters.ToArray());
                     }
+
+                    return invoker.DynamicInvoke(command);
+                }
+            }
+        }
+
+        // Creates a connection, opens it, and creates a command that uses the connection.
+        private object ExecuteCommand(Func<DbCommand, object> invoker)
+        {
+            using (DbConnection conn = (DbConnection)Activator.CreateInstance(typeof(TDatabase)))
+            {
+                using (DbCommand command = (DbCommand)Activator.CreateInstance(dbCommandType))
+                {
+                    conn.ConnectionString = CONN_STR;
+                    conn.Open();
+
+                    command.Connection = conn;
 
                     return invoker.DynamicInvoke(command);
                 }
