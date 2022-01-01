@@ -1,6 +1,5 @@
 ﻿using GenericDao.Enums;
 using GenericDao.Models;
-using Microsoft.Data.Sqlite;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -29,7 +28,7 @@ namespace GenericDao
         static void Main(string[] args)
         {
             // Test the DAO using a SQLite database
-            GenericDao<SqliteConnection> sqlLiteDao = new GenericDao<SqliteConnection>(SQLITE_CONN_STR);
+            GenericDao sqlLiteDao = new GenericDao(SQLITE_CONN_STR, DatabaseType.Sqlite);
 
             // Test creating a table
             sqlLiteDao.CreateTable(PERSON_TABLE_NAME, PERSON_COLUMNS);
@@ -54,7 +53,7 @@ namespace GenericDao
             people[1].age = 40;
             Console.WriteLine($" >> {sqlLiteDao.UpdateData("Person", people[1])} records updated");
 
-            people[5].name = "Conor Barr UPDATE 2";
+            people[5].name = "Conor Barr UPDATE 3";
             people[5].age = 19;
             Console.WriteLine($" >> {sqlLiteDao.UpdateData("Person", people[5])} records updated");
 
@@ -86,7 +85,7 @@ namespace GenericDao
             //}
         }
 
-        private static List<Person> TestSqliteRead(GenericDao<SqliteConnection> dao)
+        private static List<Person> TestSqliteRead(GenericDao dao)
         {
             return dao.ReadData("Person", (reader) =>
             {

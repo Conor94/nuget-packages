@@ -1,5 +1,7 @@
-﻿using Microsoft.Data.Sqlite;
+﻿using GenericDao.Adapters;
+using GenericDao.Enums;
 using GenericDao.Models;
+using Microsoft.Data.Sqlite;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -7,8 +9,6 @@ using System.Data.Common;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using GenericDao.Adapters;
 
 namespace GenericDao
 {
@@ -16,34 +16,36 @@ namespace GenericDao
     /// Generic data access object for SQL and SQLite databases. 
     /// </summary>
     /// <typeparam name="TDatabase"></typeparam>
-    public class GenericDao<TDatabase> where TDatabase : IDbConnection
+    public class GenericDao
     {
         private readonly string CONN_STR;
 
+        private Type dbConnectionType;
         private Type dbCommandType;
         private Type dbParameterType;
 
         private WhereAdapter whereAdapter;
 
-        public GenericDao(string connstr)
+        public GenericDao(string connstr, DatabaseType type)
         {
             CONN_STR = connstr;
 
             whereAdapter = new WhereAdapter();
 
-            if (typeof(TDatabase) == typeof(SqliteConnection))
+            switch (type)
             {
-                dbCommandType = typeof(SqliteCommand);
-                dbParameterType = typeof(SqliteParameter);
-            }
-            else if (typeof(TDatabase) == typeof(SqlConnection))
-            {
-                dbCommandType = typeof(SqlCommand);
-                dbParameterType = typeof(SqlParameter);
-            }
-            else
-            {
-                throw new Exception("Unsupported database type.");
+                case DatabaseType.Sql:
+                    dbConnectionType = typeof(SqlConnection);
+                    dbCommandType = typeof(SqlCommand);
+                    dbParameterType = typeof(SqlParameter);
+                    break;
+                case DatabaseType.Sqlite:
+                    dbConnectionType = typeof(SqliteConnection);
+                    dbCommandType = typeof(SqliteCommand);
+                    dbParameterType = typeof(SqliteParameter);
+                    break;
+                default:
+                    throw new Exception("Unsupported database type.");
             }
         }
 
@@ -65,7 +67,7 @@ namespace GenericDao
         public bool InsertData<T>(string tableName, T data)
         {
             List<IDbDataParameter> parameters = new List<IDbDataParameter>();
-            
+
             PropertyInfo[] propInfo = data.GetType().GetProperties();
 
             DataRowCollection colMetadata = GetColumnMetadata(tableName);
@@ -138,7 +140,7 @@ namespace GenericDao
                         primaryKeyParameter.Value = prop.GetValue(data);
                     }
                 }
-                
+
                 // Execute an update statement for each column. Separate update statements are used so that only columns that are
                 // actually changed get updated. The way this is being done prevents updating all columns in a single statement
                 // (if one column isn't changed, it would prevent all columns from being changed).
@@ -162,7 +164,7 @@ namespace GenericDao
                                           $"SET {colName} = @{colName} " +
                                           $"WHERE {colName} != @{colName} AND {primaryKeyColName} = @{primaryKeyColName}";
                     command.Parameters.Add(parameter);
-                    
+
                     recordsAffected += command.ExecuteNonQuery();
                 }
                 command.Transaction.Commit(); // Commit all update statements
@@ -211,7 +213,7 @@ namespace GenericDao
         // Creates a connection, opens it, and creates a command that uses the connection. This function also adds command text and parameters to the command.
         private TReturn ExecuteCommand<TReturn>(string commandText, Func<DbCommand, object> invoker, List<IDbDataParameter> parameters = null)
         {
-            using (DbConnection conn = (DbConnection)Activator.CreateInstance(typeof(TDatabase)))
+            using (DbConnection conn = (DbConnection)Activator.CreateInstance(dbConnectionType))
             {
                 using (DbCommand command = (DbCommand)Activator.CreateInstance(dbCommandType))
                 {
@@ -233,7 +235,7 @@ namespace GenericDao
         // Creates a connection, opens it, and creates a command that uses the connection.
         private TReturn ExecuteCommand<TReturn>(Func<DbCommand, object> invoker)
         {
-            using (DbConnection conn = (DbConnection)Activator.CreateInstance(typeof(TDatabase)))
+            using (DbConnection conn = (DbConnection)Activator.CreateInstance(dbConnectionType))
             {
                 using (DbCommand command = (DbCommand)Activator.CreateInstance(dbCommandType))
                 {
