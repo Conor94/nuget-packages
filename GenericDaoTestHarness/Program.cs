@@ -18,11 +18,11 @@ namespace GenericDao
 
         private static readonly Person[] samplePeople = new Person[]
         {
-            new Person() { name = "Ted Mosby", age = 31 },
-            new Person() { name = "Marshall Erickson", age = 27},
-            new Person() { name = "Lily Aldrin", age = 34 },
-            new Person() { name = "Barney Stinson", age = 38 },
-            new Person() { name = "Robin Scherbatsky", age = 33 }
+            new Person() { name = "Terrence Cook", age = 31 },
+            new Person() { name = "Eric Ware", age = 27},
+            new Person() { name = "Joy Wilks", age = 34 },
+            new Person() { name = "Michael Bruce", age = 38 },
+            new Person() { name = "Samantha Kane", age = 33 }
         };
 
         static void Main(string[] args)
@@ -49,22 +49,34 @@ namespace GenericDao
             }
 
             // Test updating data
-            people[1].name = "Marshall Erickson UPDATE";
+            people[1].name = "Eric Ware UPDATE";
             people[1].age = 40;
             Console.WriteLine($" >> {sqlLiteDao.UpdateData("Person", people[1])} records updated");
 
-            people[5].name = "Ted Mosby";
-            people[5].age = 103;
-            //Console.WriteLine($" >> {sqlLiteDao.UpdateData("Person", people[5], new WhereCondition[] { new WhereCondition("age", "34", WhereOperator.GreaterThanOrEqual) })} records updated");
-            Console.WriteLine($" >> {sqlLiteDao.UpdateData("Person", people[5], new WhereCondition[] { new WhereCondition("id", "161", WhereOperator.GreaterThanOrEqual), new WhereCondition("name", "Ted Mosby") })} records updated");
-
-            people = TestSqliteRead(sqlLiteDao);
-            Console.WriteLine("After updating");
-            Console.WriteLine("--------------");
-            foreach (Person p in people)
+            if (people.Count >= 6)
             {
-                Console.WriteLine($"{p.id}, {p.name}, {p.age}");
+                people[5].name = "Samantha Kane";
+                people[5].age = 103;
+                //Console.WriteLine($" >> {sqlLiteDao.UpdateData("Person", people[5], new WhereCondition[] { new WhereCondition("age", "34", WhereOperator.GreaterThanOrEqual) })} records updated");
+                Console.WriteLine($" >> {sqlLiteDao.UpdateData("Person", people[5], new WhereCondition[] { new WhereCondition("id", "1", WhereOperator.GreaterThanOrEqual), new WhereCondition("name", "Samantha Kane") })} records updated");
+
+                people = TestSqliteRead(sqlLiteDao);
+                Console.WriteLine("After updating");
+                Console.WriteLine("--------------");
+                foreach (Person p in people)
+                {
+                    Console.WriteLine($"{p.id}, {p.name}, {p.age}");
+                }
             }
+
+
+            // Testing deleting data
+            int rowsDeleted = sqlLiteDao.DeleteData("Person", new WhereCondition[]
+            {
+                new WhereCondition("id", 10, WhereOperator.LessThanOrEqual)
+            });
+
+            Console.WriteLine($" >> {rowsDeleted} deleted");
 
             // Test the DAO using a SQL database
             //GenericDao<SqlConnection> sqlDao = new GenericDao<SqlConnection>(SQL_CONN_STR);
