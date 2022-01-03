@@ -73,7 +73,11 @@ namespace GenericDao
             // Testing deleting data
             int rowsDeleted = sqlLiteDao.DeleteData("Person", new WhereCondition[]
             {
-                new WhereCondition("id", 10, WhereOperator.LessThanOrEqual)
+                //new WhereCondition("id", 31, WhereOperator.GreaterThanOrEqual),
+                //new WhereCondition("id", 35, WhereOperator.LessThanOrEqual),
+                new WhereCondition("name", "%W%", WhereOperator.Like),
+                //new WhereCondition("name", "('Michael','Samantha')", WhereOperator.In),
+                //new WhereCondition("id", "30 AND 40", WhereOperator.Between)
             });
 
             Console.WriteLine($" >> {rowsDeleted} deleted");

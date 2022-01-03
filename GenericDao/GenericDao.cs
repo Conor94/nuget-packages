@@ -299,7 +299,7 @@ namespace GenericDao
             for (int i = 0; i < conditions.Length; i++)
             {
                 DbParameter parameter = (DbParameter)Activator.CreateInstance(dbParameterType);
-                parameter.ParameterName = $"@where_{conditions[i].LeftSide}";
+                parameter.ParameterName = $"@where{i}_{conditions[i].LeftSide}";
                 parameter.Value = conditions[i].RightSide;
 
                 parameters.Add(parameter);
@@ -314,7 +314,7 @@ namespace GenericDao
                     throw new Exception("Query failed because the comparison operator could not be converted.");
                 }
 
-                whereStatement += $"{conditions[i].LeftSide} {comparisonOperator} @where_{conditions[i].LeftSide}";
+                whereStatement += $"{conditions[i].LeftSide} {comparisonOperator} @where{i}_{conditions[i].LeftSide}";
                 if (i != (conditions.Length - 1))
                 {
                     whereStatement += " AND ";

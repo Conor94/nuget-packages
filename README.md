@@ -44,3 +44,8 @@ Expands the Prism class heirarchy to include model and view model base classes. 
 Generic data access object (DAO) for SQLite and SQL.
 
 **Important note:** There is a known issue with this package when adding it as a reference. Refer to [Known Issues](#genericdao) for information about resolving it.
+
+This package is not currently complete. The features and improvements that still need to be implemented for this package are listed below:
+- [ ] Support for SQL operators BETWEEN and IN.
+- [ ] Support for OR between statements in a where clause. Currently all where statements are compared with AND (e.g. statement1 AND statement2 AND statement3).
+- [ ] More efficient way to create WHERE and SET statements when they both need to be used in a query.

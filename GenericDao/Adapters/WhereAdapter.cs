@@ -21,12 +21,8 @@ namespace GenericDao.Adapters
                     return "<=";
                 case WhereOperator.NotEqual:
                     return "!=";
-                case WhereOperator.Between:
-                    return "BETWEEN";
                 case WhereOperator.Like:
                     return "LIKE";
-                case WhereOperator.In:
-                    return "IN";
                 default:
                     throw new Exception($"No conversion exists for the given operator. This is an internal error in the {nameof(WhereAdapter)}.");
             }

@@ -1,5 +1,6 @@
 ﻿namespace GenericDao.Enums
 {
+    // Between and In operators are commented out because they are not working.
     public enum WhereOperator
     {
         Equal,
@@ -8,8 +9,8 @@
         GreaterThanOrEqual,
         LessThanOrEqual,
         NotEqual,
-        Between,
         Like,
-        In
+        //Between,
+        //In
     }
 }
