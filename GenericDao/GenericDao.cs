@@ -200,6 +200,21 @@ namespace GenericDao
                 }
             });
         }
+
+        /// <summary>Deletes data from the database.</summary>
+        /// <param name="tableName">Name of the table that data is being deleted from.</param>
+        /// <param name="conditions">Conditions that define what data will be deleted.</param>
+        /// <returns>The number of rows that were deleted.</returns>
+        public int DeleteData(string tableName, WhereCondition[] conditions)
+        {
+            CreateWhereStatement(conditions, out string whereStr, out List<IDbDataParameter> parameters);
+
+            return ExecuteCommand<int>($"DELETE FROM {tableName} " +
+                                       $"WHERE {whereStr}", (command) =>
+            {
+                return command.ExecuteNonQuery();
+            }, parameters);
+        }
         #endregion
 
         #region Private functions

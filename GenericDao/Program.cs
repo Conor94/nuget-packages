@@ -66,6 +66,14 @@ namespace GenericDao
                 Console.WriteLine($"{p.id}, {p.name}, {p.age}");
             }
 
+            // Testing deleting data
+            int rowsDeleted = sqlLiteDao.DeleteData("Person", new WhereCondition[]
+            {
+                new WhereCondition("id", 10, WhereOperator.LessThanOrEqual)
+            });
+
+            Console.WriteLine($" >> {rowsDeleted} deleted");
+
             // Test the DAO using a SQL database
             //GenericDao<SqlConnection> sqlDao = new GenericDao<SqlConnection>(SQL_CONN_STR);
             //sqlDao.InsertData("Person", new Person() { id = 5, name = "Barney Stinson (That guy's awesome!)" });
