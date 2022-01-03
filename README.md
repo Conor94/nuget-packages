@@ -1,7 +1,21 @@
 # Overview
 This repository contains NuGet packages that I have published to a local server. This helps with code maintainability by allowing me to store and retrieve .NET code from a single location.
 
-# How to use
+For information about the packages themselves, refer to the [Packages](#packages) section. For information about using the packages, refer to the [Using the packages](#using-the-packages) section.
+
+# Packages
+## AppConfigurationManager
+Provides a static class that can be used to create, retrieve, and save a [System.Configuration.ConfigurationSection](https://docs.microsoft.com/en-us/dotnet/api/system.configuration.configurationsection?view=netframework-4.7.2). ConfigurationSection is a .NET class that provides a way to manage an App.config file using type-safe properties.   
+
+## PrismMvvmBase
+Expands the Prism class heirarchy to include model and view model base classes. These classes inherit from a class called DataErrorBindableBase, which implements IDataErrorInfo. This allows classes that derive from ModelBase, ViewModelBase, or DataErrorBindableBase to implement custom validation logic and display custom validation results (e.g. error messages or highlighting a TextBox control in red).
+
+## GenericDao
+Generic data access object (DAO) for SQLite and SQL.
+
+**Important note:** There is a known issue with this package when adding it as a reference. Refer to [Known Issues](#genericdao) for information about resolving it.
+
+# Using the packages
 There are two ways to use the packages: installing them as a NuGet package, or adding them as a project reference. Both ways are documented below.
 
 ## Install as NuGet Package
@@ -32,15 +46,3 @@ and SQLite databases.
 To resolve this, you must install the NuGet package [System.Data.Sqlite](https://www.nuget.org/packages/System.Data.SQLite/) manually in the project
 that references GenericDao. For example, if ProjectA references GenericDao, then ProjectA must install 
 [System.Data.Sqlite](https://www.nuget.org/packages/System.Data.SQLite/). 
-
-# Packages
-## AppConfigurationManager
-Provides a static class that can be used to create, retrieve, and save a [System.Configuration.ConfigurationSection](https://docs.microsoft.com/en-us/dotnet/api/system.configuration.configurationsection?view=netframework-4.7.2). ConfigurationSection is a .NET class that provides a way to manage an App.config file using type-safe properties.   
-
-## PrismMvvmBase
-Expands the Prism class heirarchy to include model and view model base classes. These classes inherit from a class called DataErrorBindableBase, which implements IDataErrorInfo. This allows classes that derive from ModelBase, ViewModelBase, or DataErrorBindableBase to implement custom validation logic and display custom validation results (e.g. error messages or highlighting a TextBox control in red).
-
-## GenericDao
-Generic data access object (DAO) for SQLite and SQL.
-
-**Important note:** There is a known issue with this package when adding it as a reference. Refer to [Known Issues](#genericdao) for information about resolving it.
