@@ -53,18 +53,22 @@ namespace GenericDao
             people[1].age = 40;
             Console.WriteLine($" >> {sqlLiteDao.UpdateData("Person", people[1])} records updated");
 
-            people[5].name = "Ted Mosby";
-            people[5].age = 103;
-            //Console.WriteLine($" >> {sqlLiteDao.UpdateData("Person", people[5], new WhereCondition[] { new WhereCondition("age", "34", WhereOperator.GreaterThanOrEqual) })} records updated");
-            Console.WriteLine($" >> {sqlLiteDao.UpdateData("Person", people[5], new WhereCondition[] { new WhereCondition("id", "161", WhereOperator.GreaterThanOrEqual), new WhereCondition("name", "Ted Mosby") })} records updated");
-
-            people = TestSqliteRead(sqlLiteDao);
-            Console.WriteLine("After updating");
-            Console.WriteLine("--------------");
-            foreach (Person p in people)
+            if (people.Count >= 6)
             {
-                Console.WriteLine($"{p.id}, {p.name}, {p.age}");
+                people[5].name = "Ted Mosby";
+                people[5].age = 103;
+                //Console.WriteLine($" >> {sqlLiteDao.UpdateData("Person", people[5], new WhereCondition[] { new WhereCondition("age", "34", WhereOperator.GreaterThanOrEqual) })} records updated");
+                Console.WriteLine($" >> {sqlLiteDao.UpdateData("Person", people[5], new WhereCondition[] { new WhereCondition("id", "161", WhereOperator.GreaterThanOrEqual), new WhereCondition("name", "Ted Mosby") })} records updated");
+
+                people = TestSqliteRead(sqlLiteDao);
+                Console.WriteLine("After updating");
+                Console.WriteLine("--------------");
+                foreach (Person p in people)
+                {
+                    Console.WriteLine($"{p.id}, {p.name}, {p.age}");
+                }
             }
+
 
             // Testing deleting data
             int rowsDeleted = sqlLiteDao.DeleteData("Person", new WhereCondition[]

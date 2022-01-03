@@ -1,12 +1,12 @@
 ﻿using GenericDao.Adapters;
 using GenericDao.Enums;
 using GenericDao.Models;
-using Microsoft.Data.Sqlite;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
+using System.Data.SQLite;
 using System.Linq;
 using System.Reflection;
 
@@ -37,9 +37,9 @@ namespace GenericDao
                     dbParameterType = typeof(SqlParameter);
                     break;
                 case DatabaseType.Sqlite:
-                    dbConnectionType = typeof(SqliteConnection);
-                    dbCommandType = typeof(SqliteCommand);
-                    dbParameterType = typeof(SqliteParameter);
+                    dbConnectionType = typeof(SQLiteConnection);
+                    dbCommandType = typeof(SQLiteCommand);
+                    dbParameterType = typeof(SQLiteParameter);
                     break;
                 default:
                     throw new Exception("Unsupported database type.");
@@ -291,7 +291,7 @@ namespace GenericDao
                 }
             }
         }
-        
+
         private void CreateWhereStatement(WhereCondition[] conditions, out string whereStatement, out List<IDbDataParameter> parameters)
         {
             parameters = new List<IDbDataParameter>();

@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Conor Barr")]
 [assembly: AssemblyProduct("GenericDao")]
-[assembly: AssemblyCopyright("Copyright ©  2021")]
+[assembly: AssemblyCopyright("Copyright ©  2022")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -19,7 +19,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("c882b073-a9a6-477d-b4a7-3315bf59da93")]
+[assembly: Guid("4f9f862a-f39c-4a55-a815-dc4d57f9da0d")]
 
 // Version information for an assembly consists of the following four values:
 //
