@@ -9,14 +9,10 @@ using System.Data.Common;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 
 namespace GenericDao
 {
-    /// <summary>
-    /// Generic data access object for SQL and SQLite databases. 
-    /// </summary>
-    /// <typeparam name="TDatabase"></typeparam>
+    /// <summary>Generic data access object for SQL and SQLite databases.</summary>
     public class GenericDao
     {
         private readonly string CONN_STR;
@@ -50,6 +46,7 @@ namespace GenericDao
             }
         }
 
+        #region Public functions
         public bool CreateTable(string tableName, string columns)
         {
             return ExecuteCommand<bool>($"CREATE TABLE IF NOT EXISTS {tableName} ({columns})", (command) =>
@@ -114,6 +111,41 @@ namespace GenericDao
             }, parameters);
         }
 
+        public List<TData> ReadData<TData>(string tableName, Func<DbDataReader, TData> converter, string[] columnNames, WhereCondition[] conditions = null, OrderBy orderBy = null)
+        {
+            string commandText = $"SELECT {(columnNames == null ? "*" : string.Join(",", columnNames))} FROM {tableName}{(conditions != null ? " WHERE" : "")}";
+
+            List<IDbDataParameter> parameters = null;
+            if (conditions != null)
+            {
+                CreateWhereStatement(conditions, out string where, out parameters);
+                commandText += $" {where}";
+            }
+
+            if (orderBy != null)
+            {
+                commandText += $" ORDER BY {string.Join(",", orderBy.Columns)} {orderBy.Direction}";
+            }
+
+            return ExecuteCommand<List<TData>>(commandText, (command) =>
+            {
+                DbDataReader reader = command.ExecuteReader();
+
+                List<TData> data = new List<TData>();
+                while (reader.Read())
+                {
+                    data.Add(converter(reader));
+                }
+
+                return data;
+            }, parameters);
+        }
+
+        public List<TData> ReadData<TData>(string tableName, Func<DbDataReader, TData> converter, WhereCondition[] conditions = null, OrderBy orderBy = null)
+        {
+            return ReadData(tableName, converter, null, conditions, orderBy);
+        }
+
         public bool UpdateData<TData>(string tableName, TData data, WhereCondition[] conditions = null)
         {
             return ExecuteCommand<bool>((command) =>
@@ -167,45 +199,10 @@ namespace GenericDao
                     return false;
                 }
             });
-
-
         }
+        #endregion
 
-        public List<TData> ReadData<TData>(string tableName, Func<DbDataReader, TData> converter, string[] columnNames, WhereCondition[] conditions = null, OrderBy orderBy = null)
-        {
-            string commandText = $"SELECT {(columnNames == null ? "*" : string.Join(",", columnNames))} FROM {tableName}{(conditions != null ? " WHERE" : "")}";
-
-            List<IDbDataParameter> parameters = null;
-            if (conditions != null)
-            {
-                CreateWhereStatement(conditions, out string where, out parameters);
-                commandText += $" {where}";
-            }
-
-            if (orderBy != null)
-            {
-                commandText += $" ORDER BY {string.Join(",", orderBy.Columns)} {orderBy.Direction}";
-            }
-
-            return ExecuteCommand<List<TData>>(commandText, (command) =>
-            {
-                DbDataReader reader = command.ExecuteReader();
-
-                List<TData> data = new List<TData>();
-                while (reader.Read())
-                {
-                    data.Add(converter(reader));
-                }
-
-                return data;
-            }, parameters);
-        }
-
-        public List<TData> ReadData<TData>(string tableName, Func<DbDataReader, TData> converter, WhereCondition[] conditions = null, OrderBy orderBy = null)
-        {
-            return ReadData(tableName, converter, null, conditions, orderBy);
-        }
-
+        #region Private functions
         // Creates a connection, opens it, and creates a command that uses the connection. This function also adds command text and parameters to the command.
         private TReturn ExecuteCommand<TReturn>(string commandText, Func<DbCommand, object> invoker, List<IDbDataParameter> parameters = null)
         {
@@ -245,47 +242,6 @@ namespace GenericDao
             }
         }
 
-        private DataRowCollection GetColumnMetadata(string tableName)
-        {
-            return ExecuteCommand<DataRowCollection>($"SELECT * FROM {tableName} WHERE 1 = 0", (command) =>
-            {
-                DbDataReader reader = command.ExecuteReader();
-
-                DataTable schemaTable = reader.GetSchemaTable();
-                return schemaTable.Rows;
-            });
-        }
-
-        private void CreateWhereStatement(WhereCondition[] conditions, out string whereStatement, out List<IDbDataParameter> parameters)
-        {
-            parameters = new List<IDbDataParameter>();
-            whereStatement = "";
-            for (int i = 0; i < conditions.Length; i++)
-            {
-                DbParameter parameter = (DbParameter)Activator.CreateInstance(dbParameterType);
-                parameter.ParameterName = $"@where_{conditions[i].LeftSide}";
-                parameter.Value = conditions[i].RightSide;
-
-                parameters.Add(parameter);
-
-                string comparisonOperator = "";
-                try
-                {
-                    comparisonOperator = whereAdapter.ConvertOperator(conditions[i].ComparisonOperator);
-                }
-                catch (Exception)
-                {
-                    throw new Exception("Query failed because the comparison operator could not be converted.");
-                }
-
-                whereStatement += $"{conditions[i].LeftSide} {comparisonOperator} @where_{conditions[i].LeftSide}";
-                if (i != (conditions.Length - 1))
-                {
-                    whereStatement += " AND ";
-                }
-            }
-        }
-
         private void CreateSetStatement<TData>(string tableName, TData data, out string setStatement, out List<IDbDataParameter> parameters)
         {
             // Initialize returns
@@ -316,9 +272,51 @@ namespace GenericDao
                     if (i != (columnMetadata.Count - 1))
                     {
                         setStatement += ", ";
-                    } 
+                    }
                 }
             }
         }
+        
+        private void CreateWhereStatement(WhereCondition[] conditions, out string whereStatement, out List<IDbDataParameter> parameters)
+        {
+            parameters = new List<IDbDataParameter>();
+            whereStatement = "";
+            for (int i = 0; i < conditions.Length; i++)
+            {
+                DbParameter parameter = (DbParameter)Activator.CreateInstance(dbParameterType);
+                parameter.ParameterName = $"@where_{conditions[i].LeftSide}";
+                parameter.Value = conditions[i].RightSide;
+
+                parameters.Add(parameter);
+
+                string comparisonOperator = "";
+                try
+                {
+                    comparisonOperator = whereAdapter.ConvertOperator(conditions[i].ComparisonOperator);
+                }
+                catch (Exception)
+                {
+                    throw new Exception("Query failed because the comparison operator could not be converted.");
+                }
+
+                whereStatement += $"{conditions[i].LeftSide} {comparisonOperator} @where_{conditions[i].LeftSide}";
+                if (i != (conditions.Length - 1))
+                {
+                    whereStatement += " AND ";
+                }
+            }
+        }
+
+        private DataRowCollection GetColumnMetadata(string tableName)
+        {
+            return ExecuteCommand<DataRowCollection>($"SELECT * FROM {tableName} WHERE 1 = 0", (command) =>
+            {
+                DbDataReader reader = command.ExecuteReader();
+
+                DataTable schemaTable = reader.GetSchemaTable();
+                return schemaTable.Rows;
+            });
+        }
+        #endregion
     }
 }
