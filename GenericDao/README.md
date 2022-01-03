@@ -2,7 +2,19 @@
 ## How to use
 ### Install as NuGet Package
 Currently, this package is not publicly available. However, if you want to install it as a NuGet package you can publish it to a local
-feed, and then install the package from there.
+feed, and then install the package from there. Before publishing to a local feed, you must create a NuGet package. 
+
+1. Create a .nuspec file using `nuget spec *.csproj`
+2. Create a .nupkg file using `nuget pack *.csproj -Build -Properties Configuration=Release` (change Release to Debug if you want to package the Debug version)
+3. Publish to a local feed using:
+	* `nuget add new_package.1.0.0.nupkg -source DriveLetter:\path\to\package` if publishing to your local machine
+	* `nuget add new_package.1.0.0.nupkg -source \\MACHINE-NAME\path\to\package` if publishing to a network folder
+
+Microsoft has documentation on creating packages and publishing them to local feeds if you need more information.
+|Topic|Link|
+|:-|:-|
+|Creating a package using nuget.exe CLI|https://docs.microsoft.com/en-us/nuget/create-packages/creating-a-package
+|Publishing to local feed|https://docs.microsoft.com/en-us/nuget/hosting-packages/local-feeds
 
 
 ### Add a project reference
