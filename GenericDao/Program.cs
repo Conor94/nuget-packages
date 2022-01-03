@@ -53,9 +53,10 @@ namespace GenericDao
             people[1].age = 40;
             Console.WriteLine($" >> {sqlLiteDao.UpdateData("Person", people[1])} records updated");
 
-            people[5].name = "Conor Barr UPDATE 3";
-            people[5].age = 19;
-            Console.WriteLine($" >> {sqlLiteDao.UpdateData("Person", people[5])} records updated");
+            people[5].name = "Ted Mosby";
+            people[5].age = 103;
+            //Console.WriteLine($" >> {sqlLiteDao.UpdateData("Person", people[5], new WhereCondition[] { new WhereCondition("age", "34", WhereOperator.GreaterThanOrEqual) })} records updated");
+            Console.WriteLine($" >> {sqlLiteDao.UpdateData("Person", people[5], new WhereCondition[] { new WhereCondition("id", "161", WhereOperator.GreaterThanOrEqual), new WhereCondition("name", "Ted Mosby") })} records updated");
 
             people = TestSqliteRead(sqlLiteDao);
             Console.WriteLine("After updating");

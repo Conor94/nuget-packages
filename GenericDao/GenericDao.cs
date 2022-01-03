@@ -9,6 +9,7 @@ using System.Data.Common;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 
 namespace GenericDao
 {
@@ -113,63 +114,58 @@ namespace GenericDao
             }, parameters);
         }
 
-        public int UpdateData<TData>(string tableName, TData data)
+        public bool UpdateData<TData>(string tableName, TData data, WhereCondition[] conditions = null)
         {
-            return ExecuteCommand<int>((command) =>
+            return ExecuteCommand<bool>((command) =>
             {
-                int recordsAffected = 0;
-
                 PropertyInfo[] propInfo = data.GetType().GetProperties();
                 DataRowCollection colMetadata = GetColumnMetadata(tableName);
 
-                // Need to make sure we have the primary key before doing any updates
-                DbParameter primaryKeyParameter = (DbParameter)Activator.CreateInstance(dbParameterType);
-                string primaryKeyColName = "";
-                for (int i = 0; i < colMetadata.Count; i++)
+                // Build the set statement
+                CreateSetStatement(tableName, data, out string setStatement, out List<IDbDataParameter> setParameters);
+
+                // Build the where statement
+                string whereStr = null;
+                List<IDbDataParameter> whereParameters = null;
+                if (conditions != null && conditions.Length > 0)
                 {
-                    // Get primary key column name so it can be used in the WHERE statement
-                    if ((bool)colMetadata[i][SchemaTableOptionalColumn.IsAutoIncrement])
+                    CreateWhereStatement(conditions, out whereStr, out whereParameters); // Create a string and parameters for the where statement
+                }
+                else
+                {
+                    // Create a where statement for the primary key if where conditions were not provided
+                    for (int i = 0; i < colMetadata.Count; i++)
                     {
-                        primaryKeyColName = colMetadata[i][SchemaTableColumn.ColumnName].ToString();
+                        if ((bool)colMetadata[i][SchemaTableOptionalColumn.IsAutoIncrement])
+                        {
+                            string colName = colMetadata[i][SchemaTableColumn.ColumnName].ToString();
+                            PropertyInfo prop = propInfo.ToList().Find(p => p.Name == colName);
+                            object val = prop.GetValue(data);
 
-                        // Assign column name to parameter
-                        primaryKeyParameter.ParameterName = $"@{primaryKeyColName}";
-
-                        // Assign value to parameter
-                        PropertyInfo prop = propInfo.ToList().Find(p => p.Name == primaryKeyColName);
-                        primaryKeyParameter.Value = prop.GetValue(data);
+                            CreateWhereStatement(new WhereCondition[]
+                            {
+                                new WhereCondition(colName, val, WhereOperator.Equal)
+                            },
+                            out whereStr,
+                            out whereParameters);
+                        }
                     }
                 }
 
-                // Execute an update statement for each column. Separate update statements are used so that only columns that are
-                // actually changed get updated. The way this is being done prevents updating all columns in a single statement
-                // (if one column isn't changed, it would prevent all columns from being changed).
-                command.Transaction = command.Connection.BeginTransaction(); // Perform all update statements in a single transaction
-                for (int i = 0; i < colMetadata.Count; i++)
+                command.CommandText = $"UPDATE {tableName} " +
+                                      $"SET {setStatement} " +
+                                      $"WHERE {whereStr}";
+                command.Parameters.AddRange(whereParameters.ToArray());
+                command.Parameters.AddRange(setParameters.ToArray());
+
+                if (command.ExecuteNonQuery() > 0)
                 {
-                    DataRow col = colMetadata[i];
-
-                    string colName = col[SchemaTableColumn.ColumnName].ToString();
-
-                    // Add parameter name and value
-                    DbParameter parameter = (DbParameter)Activator.CreateInstance(dbParameterType);
-                    parameter.ParameterName = $"@{colName}";
-                    PropertyInfo prop = propInfo.ToList().Find(p => p.Name == colName);
-                    if (prop != null)
-                    {
-                        parameter.Value = prop.GetValue(data);
-                    }
-
-                    command.CommandText = $"UPDATE {tableName} " +
-                                          $"SET {colName} = @{colName} " +
-                                          $"WHERE {colName} != @{colName} AND {primaryKeyColName} = @{primaryKeyColName}";
-                    command.Parameters.Add(parameter);
-
-                    recordsAffected += command.ExecuteNonQuery();
+                    return true;
                 }
-                command.Transaction.Commit(); // Commit all update statements
-
-                return recordsAffected;
+                else
+                {
+                    return false;
+                }
             });
 
 
@@ -182,7 +178,7 @@ namespace GenericDao
             List<IDbDataParameter> parameters = null;
             if (conditions != null)
             {
-                CreateWhere(conditions, out string where, out parameters);
+                CreateWhereStatement(conditions, out string where, out parameters);
                 commandText += $" {where}";
             }
 
@@ -260,14 +256,14 @@ namespace GenericDao
             });
         }
 
-        private void CreateWhere(WhereCondition[] conditions, out string where, out List<IDbDataParameter> parameters)
+        private void CreateWhereStatement(WhereCondition[] conditions, out string whereStatement, out List<IDbDataParameter> parameters)
         {
             parameters = new List<IDbDataParameter>();
-            where = "";
+            whereStatement = "";
             for (int i = 0; i < conditions.Length; i++)
             {
                 DbParameter parameter = (DbParameter)Activator.CreateInstance(dbParameterType);
-                parameter.ParameterName = $"@{conditions[i].LeftSide}";
+                parameter.ParameterName = $"@where_{conditions[i].LeftSide}";
                 parameter.Value = conditions[i].RightSide;
 
                 parameters.Add(parameter);
@@ -282,10 +278,45 @@ namespace GenericDao
                     throw new Exception("Query failed because the comparison operator could not be converted.");
                 }
 
-                where += $"{conditions[i].LeftSide} {comparisonOperator} @{conditions[i].LeftSide}";
+                whereStatement += $"{conditions[i].LeftSide} {comparisonOperator} @where_{conditions[i].LeftSide}";
                 if (i != (conditions.Length - 1))
                 {
-                    where += ",";
+                    whereStatement += " AND ";
+                }
+            }
+        }
+
+        private void CreateSetStatement<TData>(string tableName, TData data, out string setStatement, out List<IDbDataParameter> parameters)
+        {
+            // Initialize returns
+            parameters = new List<IDbDataParameter>();
+            setStatement = "";
+
+            // Get column and property metadata
+            DataRowCollection columnMetadata = GetColumnMetadata(tableName);
+            PropertyInfo[] propInfo = data.GetType().GetProperties();
+
+            for (int i = 0; i < columnMetadata.Count; i++)
+            {
+                if (!(bool)columnMetadata[i][SchemaTableColumn.IsKey]) // Don't add the primary key to the set statement
+                {
+                    DbParameter parameter = (DbParameter)Activator.CreateInstance(dbParameterType);
+
+                    // Get the column name
+                    string colName = columnMetadata[i][SchemaTableColumn.ColumnName].ToString();
+                    parameter.ParameterName = $"@set_{colName}";
+
+                    // Get a value for the parameter
+                    parameter.Value = propInfo.ToList().Find((prop) => prop.Name == colName).GetValue(data);
+
+                    parameters.Add(parameter);
+
+                    // Append to the set statement string
+                    setStatement += $"{colName} = {parameter.ParameterName}";
+                    if (i != (columnMetadata.Count - 1))
+                    {
+                        setStatement += ", ";
+                    } 
                 }
             }
         }

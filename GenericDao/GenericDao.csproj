@@ -81,6 +81,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Adapters\WhereAdapter.cs" />
+    <Compile Include="Enums\DatabaseType.cs" />
     <Compile Include="Enums\OrderByDirection.cs" />
     <Compile Include="Enums\WhereOperator.cs" />
     <Compile Include="GenericDao.cs" />
