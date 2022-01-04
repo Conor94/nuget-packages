@@ -165,6 +165,35 @@ namespace GenericDAO
             return ReadData(tableName, converter, null, conditions, orderBy);
         }
 
+        /// <summary>Gets the number of records in a table that match the given conditions. All rows in the table will be counted if no conditions are provided.</summary>
+        /// <param name="tableName">Name of the table.</param>
+        /// <param name="conditions">Where conditions used to filter records.</param>
+        /// <returns>The number of records.</returns>
+        public int GetCount(string tableName, WhereCondition[] conditions = null)
+        {
+            string whereStr = null;
+            List<IDbDataParameter> parameters = null;
+            if (conditions != null)
+            {
+                CreateWhereStatement(conditions, out whereStr, out parameters);
+            }
+
+            return ExecuteCommand($"SELECT COUNT(*) FROM {tableName} " +
+                                  $"{(whereStr != null ? $"WHERE {whereStr}" : "")}", 
+                (command) =>
+                {
+                    try
+                    {
+                        return Convert.ToInt32(command.ExecuteScalar()); // Execute command to get number of rows, and return the result
+                    }
+                    catch (Exception)
+                    {
+                        throw new Exception($"Error occurred getting the number of rows for table '{tableName}'.");
+                    }
+                }, 
+                parameters);
+        }
+
         /// <summary>Updates a record in a table.</summary>
         /// <typeparam name="TData">The type of data that's being updated.</typeparam>
         /// <param name="tableName">Name of the table that's being updated.</param>

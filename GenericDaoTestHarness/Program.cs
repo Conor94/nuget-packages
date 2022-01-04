@@ -69,6 +69,10 @@ namespace GenericDAO
                 }
             }
 
+            // Return the number of people with the name "Samantha"
+            Console.WriteLine();
+            Console.WriteLine($" >> Number of records in Person table = {sqlLiteDao.GetCount("Person", new WhereCondition[] { new WhereCondition("name", "%Samantha%", WhereOperator.Like)})}");
+            Console.WriteLine();
 
             // Testing deleting data
             int rowsDeleted = sqlLiteDao.DeleteData("Person", new WhereCondition[]
@@ -83,23 +87,23 @@ namespace GenericDAO
             Console.WriteLine($" >> {rowsDeleted} deleted");
 
             // Test the DAO using a SQL database
-            //GenericDao<SqlConnection> sqlDao = new GenericDao<SqlConnection>(SQL_CONN_STR);
-            //sqlDao.InsertData("Person", new Person() { id = 5, name = "Barney Stinson (That guy's awesome!)" });
-            //List<Person> sqlPeople = sqlDao.ReadData("Person", (reader) =>
-            //{
-            //    return new Person()
-            //    {
-            //        id = Convert.ToInt32(reader["id"]),
-            //        name = reader["name"].ToString()
-            //    };
-            //});
+            DAO sqlDao = new DAO(SQL_CONN_STR, DatabaseType.Sql);
+            sqlDao.InsertData("Person", new Person() { id = 5, name = "Barney Stinson (That guy's awesome!)" });
+            List<Person> sqlPeople = sqlDao.ReadData("Person", (reader) =>
+            {
+                return new Person()
+                {
+                    id = Convert.ToInt32(reader["id"]),
+                    name = reader["name"].ToString()
+                };
+            });
 
-            //Console.WriteLine("People table from SQL database");
-            //Console.WriteLine("------------------------------");
-            //foreach (Person p in sqlPeople)
-            //{
-            //    Console.WriteLine($"{p.id}, {p.name}");
-            //}
+            Console.WriteLine("People table from SQL database");
+            Console.WriteLine("------------------------------");
+            foreach (Person p in sqlPeople)
+            {
+                Console.WriteLine($"{p.id}, {p.name}");
+            }
         }
 
         private static List<Person> TestSqliteRead(DAO dao)
