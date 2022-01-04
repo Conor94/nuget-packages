@@ -47,21 +47,25 @@ namespace GenericDAO
         }
 
         #region Public functions
-        public bool CreateTable(string tableName, string columns)
+        /// <summary>Creates a table.</summary>
+        /// <param name="tableName">The name of the table.</param>
+        /// <param name="columns">The column definitions. Include the name of column, data type, and any constraints.</param>
+        /// <param name="createIfNotExists">Specifies whether the IF NOT EXISTS option should be used when creating the table. 
+        /// <see langword="true"/> if it should be used, and <see langword="false"/> if it shouldn't.</param>
+        public void CreateTable(string tableName, string columns, bool createIfNotExists = true)
         {
-            return ExecuteCommand<bool>($"CREATE TABLE IF NOT EXISTS {tableName} ({columns})", (command) =>
+            ExecuteCommand<object>($"CREATE TABLE {(createIfNotExists ? "IF NOT EXISTS" : "")} {tableName} ({columns})", (command) =>
             {
-                if (command.ExecuteNonQuery() > 0)
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
+                command.ExecuteNonQuery();
+                return null;
             });
         }
 
+        /// <summary>Inserts data into a table.</summary>
+        /// <typeparam name="T">Type of data that is being inserted.</typeparam>
+        /// <param name="tableName">Name of the table that's being inserted into.</param>
+        /// <param name="data">The data that's being inserted.</param>
+        /// <returns><see langword="true"/> if the any rows were inserted and <see langword="false"/> if no rows were inserted.</returns>
         public bool InsertData<T>(string tableName, T data)
         {
             List<IDbDataParameter> parameters = new List<IDbDataParameter>();
@@ -111,6 +115,14 @@ namespace GenericDAO
             }, parameters);
         }
 
+        /// <summary>Reads data from the database.</summary>
+        /// <typeparam name="TData">The type of data that's being read.</typeparam>
+        /// <param name="tableName">Name of the table that data is being read from.</param>
+        /// <param name="converter">Function that is used to convert the data from a <see cref="DbDataReader"/> to a <typeparamref name="TData"/> object.</param>
+        /// <param name="columnNames">Column names that are being read. If this value is <see langword="null"/>, all columns will be read.</param>
+        /// <param name="conditions">Array of objects that represent SQL where statements.</param>
+        /// <param name="orderBy">Object that represents a SQL order by statement.</param>
+        /// <returns>The data that was read.</returns>
         public List<TData> ReadData<TData>(string tableName, Func<DbDataReader, TData> converter, string[] columnNames, WhereCondition[] conditions = null, OrderBy orderBy = null)
         {
             string commandText = $"SELECT {(columnNames == null ? "*" : string.Join(",", columnNames))} FROM {tableName}{(conditions != null ? " WHERE" : "")}";
@@ -141,11 +153,25 @@ namespace GenericDAO
             }, parameters);
         }
 
+        /// <summary>Reads data from the database.</summary>
+        /// <typeparam name="TData">The type of data that's being read.</typeparam>
+        /// <param name="tableName">Name of the table that data is being read from.</param>
+        /// <param name="converter">Function that is used to convert the data from a <see cref="DbDataReader"/> to a <typeparamref name="TData"/> object.</param>
+        /// <param name="conditions">Array of objects that represent SQL where statements.</param>
+        /// <param name="orderBy">Object that represents a SQL order by statement.</param>
+        /// <returns>The data that was read.</returns>
         public List<TData> ReadData<TData>(string tableName, Func<DbDataReader, TData> converter, WhereCondition[] conditions = null, OrderBy orderBy = null)
         {
             return ReadData(tableName, converter, null, conditions, orderBy);
         }
 
+        /// <summary>Updates a record in a table.</summary>
+        /// <typeparam name="TData">The type of data that's being updated.</typeparam>
+        /// <param name="tableName">Name of the table that's being updated.</param>
+        /// <param name="data">The data that is being updated.</param>
+        /// <param name="conditions">Array of objects that represent SQL where statements. If this value is <see langword="null"/>, the primary
+        /// key for the data is used for the where condition.</param>
+        /// <returns><see langword="true"/> if any records were updated and <see langword="false"/> if no records were updated.</returns>
         public bool UpdateData<TData>(string tableName, TData data, WhereCondition[] conditions = null)
         {
             return ExecuteCommand<bool>((command) =>
@@ -218,8 +244,13 @@ namespace GenericDAO
         #endregion
 
         #region Private functions
-        // Creates a connection, opens it, and creates a command that uses the connection. This function also adds command text and parameters to the command.
-        private TReturn ExecuteCommand<TReturn>(string commandText, Func<DbCommand, object> invoker, List<IDbDataParameter> parameters = null)
+        /// <summary>Creates a connection, opens it, and creates a command that uses the connection. This function also adds command text and parameters to the command.</summary>
+        /// <typeparam name="TReturn">The type of data returned by the <paramref name="invoker"/>.</typeparam>
+        /// <param name="commandText">The SQL statement that will be executed.</param>
+        /// <param name="invoker">The function that will invoke the <see cref="DbCommand"/>.</param>
+        /// <param name="parameters">The parameters that will be provided to the <see cref="DbCommand"/>.</param>
+        /// <returns>The data that is returned by executing the command (e.g. the data returned by the SQL query).</returns>
+        private TReturn ExecuteCommand<TReturn>(string commandText, Func<DbCommand, TReturn> invoker, List<IDbDataParameter> parameters = null)
         {
             using (DbConnection conn = (DbConnection)Activator.CreateInstance(dbConnectionType))
             {
@@ -240,8 +271,13 @@ namespace GenericDAO
             }
         }
 
-        // Creates a connection, opens it, and creates a command that uses the connection.
-        private TReturn ExecuteCommand<TReturn>(Func<DbCommand, object> invoker)
+        /// <summary>Creates a connection, opens it, and creates a command that uses the connection. The purpose of this overload is to allow the <paramref name="invoker"/>
+        /// to provide <see cref="DbCommand.CommandText"/> and <see cref="DbCommand.Parameters"/> to the <see cref="DbCommand"/>.</summary>
+        /// <typeparam name="TReturn">The type of data returned by the <paramref name="invoker"/>.</typeparam>
+        /// <param name="invoker">The function that will execute the <see cref="DbCommand"/>. For this overloaded function, the invoker is also responsible
+        /// for providing <see cref="DbCommand.CommandText"/> and <see cref="DbCommand.Parameters"/>.</param>
+        /// <returns>The data that is returned by executing the command (e.g. the data returned by the SQL query).</returns>
+        private TReturn ExecuteCommand<TReturn>(Func<DbCommand, TReturn> invoker)
         {
             using (DbConnection conn = (DbConnection)Activator.CreateInstance(dbConnectionType))
             {
@@ -257,6 +293,12 @@ namespace GenericDAO
             }
         }
 
+        /// <summary>Creates a string and list of parameters for a SQL set statement from the provided table name and data.</summary>
+        /// <remarks>A set statement is used to update data.</remarks>
+        /// <param name="tableName">Name of the table that the set statement is being created for.</param>
+        /// <param name="data">Data that is being used to create the set statement.</param>
+        /// <param name="setStatement">The set statement that was prepared by this function.</param>
+        /// <param name="parameters">The parameters that were prepared by this function.</param>
         private void CreateSetStatement<TData>(string tableName, TData data, out string setStatement, out List<IDbDataParameter> parameters)
         {
             // Initialize returns
@@ -292,6 +334,10 @@ namespace GenericDAO
             }
         }
 
+        /// <summary>Creates a string and list of parameters for a SQL where statement from an array of <see cref="WhereCondition"/>.</summary>
+        /// <param name="conditions">Array of objects that are used to create the where string and parameters.</param>
+        /// <param name="whereStatement">The where statement that was prepared by this function.</param>
+        /// <param name="parameters">The parameters that were prepared by this function.</param>
         private void CreateWhereStatement(WhereCondition[] conditions, out string whereStatement, out List<IDbDataParameter> parameters)
         {
             parameters = new List<IDbDataParameter>();
@@ -322,6 +368,10 @@ namespace GenericDAO
             }
         }
 
+        /// <summary>Gets metadata for all columns for a table.</summary>
+        /// <param name="tableName">The name of the table.</param>
+        /// <returns><see cref="DataRowCollection"/> that holds column metadata. Each <see cref="DataRow"/> in the collection
+        /// has metadata for a column in the table.</returns>
         private DataRowCollection GetColumnMetadata(string tableName)
         {
             return ExecuteCommand<DataRowCollection>($"SELECT * FROM {tableName} WHERE 1 = 0", (command) =>

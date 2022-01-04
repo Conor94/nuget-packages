@@ -48,4 +48,6 @@ Generic data access object (DAO) for SQLite and SQL.
 This package is not currently complete. The features and improvements that still need to be implemented for this package are listed below:
 - [ ] Support for SQL operators BETWEEN and IN.
 - [ ] Support for OR between statements in a where clause. Currently all where statements are compared with AND (e.g. statement1 AND statement2 AND statement3).
+- [ ] Update function for multiple records. The current update function only supports updating a single record at a time.
 - [ ] More efficient way to create WHERE and SET statements when they both need to be used in a query.
+- [ ] Better return values for CRUD functions.
