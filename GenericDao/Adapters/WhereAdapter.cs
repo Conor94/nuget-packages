@@ -1,7 +1,7 @@
-﻿using GenericDao.Enums;
+﻿using GenericDAO.Enums;
 using System;
 
-namespace GenericDao.Adapters
+namespace GenericDAO.Adapters
 {
     public class WhereAdapter
     {

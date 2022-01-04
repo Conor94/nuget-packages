@@ -1,4 +1,4 @@
-﻿namespace GenericDao.Enums
+﻿namespace GenericDAO.Enums
 {
     public enum OrderByDirection
     {

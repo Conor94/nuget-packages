@@ -1,10 +1,10 @@
-﻿using GenericDao.Enums;
-using GenericDao.Models;
+﻿using GenericDAO.Enums;
+using GenericDAO.Models;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
 
-namespace GenericDao
+namespace GenericDAO
 {
     class Program
     {
@@ -28,7 +28,7 @@ namespace GenericDao
         static void Main(string[] args)
         {
             // Test the DAO using a SQLite database
-            GenericDao sqlLiteDao = new GenericDao(SQLITE_CONN_STR, DatabaseType.Sqlite);
+            DAO sqlLiteDao = new DAO(SQLITE_CONN_STR, DatabaseType.Sqlite);
 
             // Test creating a table
             sqlLiteDao.CreateTable(PERSON_TABLE_NAME, PERSON_COLUMNS);
@@ -102,7 +102,7 @@ namespace GenericDao
             //}
         }
 
-        private static List<Person> TestSqliteRead(GenericDao dao)
+        private static List<Person> TestSqliteRead(DAO dao)
         {
             return dao.ReadData("Person", (reader) =>
             {

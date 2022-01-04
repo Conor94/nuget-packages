@@ -1,4 +1,4 @@
-﻿namespace GenericDao.Models
+﻿namespace GenericDAO.Models
 {
     public class SetCommand
     {

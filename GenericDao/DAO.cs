@@ -1,6 +1,6 @@
-﻿using GenericDao.Adapters;
-using GenericDao.Enums;
-using GenericDao.Models;
+﻿using GenericDAO.Adapters;
+using GenericDAO.Enums;
+using GenericDAO.Models;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -10,10 +10,10 @@ using System.Data.SQLite;
 using System.Linq;
 using System.Reflection;
 
-namespace GenericDao
+namespace GenericDAO
 {
     /// <summary>Generic data access object for SQL and SQLite databases.</summary>
-    public class GenericDao
+    public class DAO
     {
         private readonly string CONN_STR;
 
@@ -23,7 +23,7 @@ namespace GenericDao
 
         private WhereAdapter whereAdapter;
 
-        public GenericDao(string connstr, DatabaseType type)
+        public DAO(string connstr, DatabaseType type)
         {
             CONN_STR = connstr;
 

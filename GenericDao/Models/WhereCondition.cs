@@ -1,6 +1,6 @@
-﻿using GenericDao.Enums;
+﻿using GenericDAO.Enums;
 
-namespace GenericDao.Models
+namespace GenericDAO.Models
 {
     public class WhereCondition
     {

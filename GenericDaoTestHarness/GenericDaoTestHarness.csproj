@@ -72,9 +72,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\GenericDao\GenericDao.csproj">
+    <ProjectReference Include="..\GenericDAO\GenericDAO.csproj">
       <Project>{4f9f862a-f39c-4a55-a815-dc4d57f9da0d}</Project>
-      <Name>GenericDao</Name>
+      <Name>GenericDAO</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

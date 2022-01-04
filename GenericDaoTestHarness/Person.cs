@@ -1,4 +1,4 @@
-﻿namespace GenericDao
+﻿namespace GenericDAO
 {
     public class Person
     {
